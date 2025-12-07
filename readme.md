@@ -5,61 +5,9 @@ B+ trees are ordered collections of key-value pairs, sorted by key.
 
 This is a fast B+ tree implementation, largely compatible with the standard Map, but with a much more diverse and powerful API. To use it, `import BTree from 'sorted-btree'`.
 
-`BTree` is faster and/or uses less memory than other popular JavaScript sorted trees (see Benchmarks). However, data structures in JavaScript tend to be slower than the built-in `Array` and `Map` data structures in typical cases, because the built-in data structures are mostly implemented in a faster language such as C++. Even so, if you have a large amount of data that you want to keep sorted, the built-in data structures will not serve you well, and `BTree` offers features like fast cloning that the built-in types don't.
+`BTree` is faster and/or uses less memory than other popular JavaScript sorted trees (see Benchmarks). However, data structures in JavaScript tend to be slower than the built-in `Array` and `Map` data structures in typical cases, because the built-in data structures are mostly implemented in a faster language such as C++. Even so, if you have a large amount of data that you want to keep sorted, the built-in data structures will not serve you well, and `BTree` offers a variety of features like fast cloning and diffing, which the built-in types don't.
 
 Use `npm install sorted-btree` in a terminal to install it in your npm-based project.
-
-### Extended algorithms
-
-The default export gives you the core tree and functionality. When you need the heavier helpers, import them explicitly:
-
-```ts
-import BTreeEx from 'sorted-btree/extended';
-import { diffAgainst } from 'sorted-btree/extended/diffAgainst';
-```
-
-`BTreeEx` is a drop-in subclass of `BTree` that keeps advanced helpers on the instance, while the standalone `diffAgainst` entry point lets bundlers include only that function when you don't need the rest of the extended surface.
-
-Ukraine is still under attack
------------------------------
-
-I'm writing this on March 24, 2022: the one-month anniversary of the full-scale invasion of Ukraine.
-
-![Mariupol](http://david.loyc.net/misc/ukraine/Mariupol-from-above.webp)
-
-This is the city of Mariupol, which Russia badly damaged after cutting off electricity, water and heat on March 1. Pre-war population: 431,859. Do you see any military targets here? No, these are homes that many people still live in. Russia has even made it [dangerous to leave](https://www.bbc.com/news/world-europe-60629851). [An official told NPR:](https://www.dailymail.co.uk/news/article-10580113/All-people-die-Zelensky-slams-NATOs-refusal-establish-no-fly-zone.html) 'When the people organised in evacuation points, they [Russians] started attack on evacuation points. Not all the city. Just evacuation points.'
-
-Officially, [as of 9 days ago, 2,400 civilians had been killed](https://www.nytimes.com/2022/03/15/world/europe/mariupol-death-toll-ukraine.html), but this is said to be an underestimate and the actual number of murders may have been as high as 20,000... nine days ago.
-
-Now, I'm just a lowly programming-language designer with no real following on [Twitter](https://twitter.com/DPiepgrass), so I'm venting here.
-
-I have donated to the Red Cross in support of Ukraine, and also to AVD-Info and Meduza in order to help give Russians access to information (the Russian internet is heavily censored, and independent media are banned). For more donation ideas, [see here](https://forum.effectivealtruism.org/posts/qkhoBJRNQT4EFWos7/what-are-effective-ways-to-help-ukrainians-right-now). Personally, I would like people to ask their government to [offer large rewards to those who desert from the Russian military](https://betonit.blog/2022/03/02/make-desertion-fast/) (plus large rewards for delivering Russian military hardware to Ukraine). The free world is already spending billions of dollars on military aid to Ukraine, but buying out soldiers can be cheaper than killing them. For talented Russian professionals, rewards should be offered for leaving Russia. Bring a brain drain to Putinland.
-
-Without electricity, reports from Mariupol have been limited, but certainly there is enough information to see that the situation is very bad.
-
-![Mariupol apartment bombed](http://david.loyc.net/misc/ukraine/Mariupol-explosion.webp)
-
-Here you can see the famous Donetsk Academic Regional Drama Theatre, labeled "дети" ("children") in huge letters, which held over 1,000 civilians. Russia bombed it anyway.
-
-![Mariupol theatre](http://david.loyc.net/misc/ukraine/Mariupol-theatre-children.webp)
-![Mariupol theatre before](http://david.loyc.net/misc/ukraine/Mariupol-theatre-children-before.jpg)
-
-For more images and stories from Mariupol, [see here](https://twitter.com/DPiepgrass/status/1506642788074536965).
-
-Meanwhile, I hope you don't live in an apartment in [Borodyanka](https://euromaidanpress.com/2022/03/06/close-the-sky-or-how-russia-bombed-out-my-town-of-borodyanka), near Kyiv...
-
-![Borodyanka 1](http://david.loyc.net/misc/ukraine/central-Borodyanka-after.jpeg)
-![Borodyanka 2](http://david.loyc.net/misc/ukraine/Borodyanka.png)
-
-Or in these other places...
-
-![Before/after](http://david.loyc.net/misc/ukraine/before-after.jpg)
-![Chernihiv](http://david.loyc.net/misc/ukraine/Chernihiv-before-after.webp)
-![Irpin](http://david.loyc.net/misc/ukraine/Irpin-burns.webp)
-![Kharkiv](http://david.loyc.net/misc/ukraine/Kharkiv-firefighters-rubble.webp)
-![Kharkiv](http://david.loyc.net/misc/ukraine/Kharkiv-two-dead.webp)
-
-What's that? You just wanted a B+ tree? Well, you're in for a treat.
 
 Features
 --------
@@ -88,14 +36,14 @@ Features
   with all keys in a given node.
 - Includes neat stuff such as `Range` methods for batch operations
 - Throws an exception if you try to use `NaN` as a key, but infinity is allowed.
-- No dependencies. 19.8K minified.
+- No dependencies. 19.5K minified, 5.5K gzipped (plus an extra 22.8K minified / 9.2K gzipped if you use `BTreeEx`)
 - Includes a lattice of interfaces for TypeScript users (see below)
 - Supports diffing computation between two trees that is highly optimized for the case
   in which a majority of nodes are shared (such as when persistent methods are used).
 - Supports fast union & shared-key iteration via `forEachKeyInBoth` with asymptotic speedups when large disjoint ranges of keys are present.
   The union operation generates a new tree that shares nodes with the original trees when possible.
 
-### Additional operations supported on this B+ tree ###
+### Additional operations supported on this `BTree` ###
 
 - Set a value only if the key does not already exist: `t.setIfNotPresent(k,v)`
 - Set a value only if the key already exists: `t.changeIfPresent(k,v)`
@@ -112,7 +60,6 @@ Features
 - Get largest key/pair that is lower than `k`: `t.nextLowerKey(k)`, `t.nextLowerPair(k)`
 - Freeze to prevent modifications: `t.freeze()` (you can also `t.unfreeze()`)
 - Fast clone: `t.clone()`
-- Compute a diff between two trees (quickly skipping shared subtrees): `BTreeEx#diffAgainst(otherTree, ...)` or the standalone `diffAgainst(treeA, treeB, ...)` helper from `sorted-btree/extended/diffAgainst` (breaking change in v1.9: the default `BTree` no longer includes `diffAgainst`)
 - For more information, **see [full documentation](https://github.com/qwertie/btree-typescript/blob/master/b%2Btree.ts) in the source code.**
 
 **Note:** Confusingly, the ES6 `Map.forEach(c)` method calls `c(value,key)` instead of `c(key,value)`, in contrast to other methods such as `set()` and `entries()` which put the key first. I can only assume that they reversed the order on the hypothesis that users would usually want to examine values and ignore keys. BTree's `forEach()` therefore works the same way, but there is a second method `.forEachPair((key,value)=>{...})` which sends you the key first and the value second; this method is slightly faster because it is the "native" for-each method for this class.
@@ -138,6 +85,33 @@ The "scanning" methods (`forEach, forRange, editRange, deleteRange`) will normal
 - Get a new tree that is the result of a union: `t.union(other, unionFn)`
 
 **Things to keep in mind:** I ran a test which suggested `t.with` is three times slower than `t.set`. These methods do not return a frozen tree even if the original tree was frozen (for performance reasons, e.g. frozen trees use slightly more memory.)
+
+### Additional optimized operations in `BTreeEx`
+
+- Find differences between two trees, quickly skipping shared subtrees: `tree1.diffAgainst(tree2, function tree1Only(k, v) {}, function tree2Only(k, v) {}, function different(k, v1, v2) {})` (standalone: `diffAgainst(treeA, treeB, ...)`)
+- Examine keys shared between two trees: `tree1.forEachKeyInBoth(tree2, (k, val1, val2) => {...})`
+- Examine keys unique to this tree: `tree1.forEachKeyNotIn(tree2, (k, v) => {...})`
+- Get the intersection (overlap) between two trees: `tree1.intersect(tree2, (k, val1, val2) => val1)`
+- Get the union (combination) of two trees: `tree1.union(tree2, (k, val1, val2) => val1)`
+- Get a copy without keys from another tree: `tree1.subtract(tree2)`
+- Fast bulk load: `BTreeEx.bulkLoad(entries, 32)`
+- For more information, **see [full documentation](https://github.com/qwertie/btree-typescript/blob/master/extended/index.ts) in the source code.**
+
+### Two ways to use the extra algorithms
+
+The default export gives you the core tree and functionality; import `BTreeEx` to get an extended `BTreeEx` class with all the extra goodies:
+
+```ts
+import BTreeEx from 'sorted-btree/extended';
+```
+
+Alternately, you can continue using `BTree` but import individual algorithms instead:
+
+```ts
+import diffAgainst from 'sorted-btree/extended/diffAgainst';
+```
+
+`BTreeEx` is a drop-in subclass of `BTree` that keeps advanced helpers on the instance, while the standalone `diffAgainst` entry point lets bundlers include only that function when you don't need the rest of the extended surface.
 
 Examples
 --------
@@ -263,180 +237,490 @@ Similarly, `ISet<K>` is compatible with ES6 `Set`. Again there are compromises:
 
 Although `BTree<K,V>` doesn't directly implement `ISet<K>`, it does implement `ISetSource<K>` and it is safe to cast `BTree<K,V>` to `ISet<K>` or `ISortedSet<K>` provided that `V` is allowed to be undefined.
 
+Ukraine is still under attack
+-----------------------------
+
+I wrote this on March 24, 2022: the one-month anniversary of the full-scale invasion of Ukraine.
+
+![Mariupol](http://david.loyc.net/misc/ukraine/Mariupol-from-above.webp)
+
+This is the city of Mariupol, which Russia badly damaged after cutting off electricity, water and heat on March 1. Pre-war population: 431,859. Do you see any military targets here? No, these are homes that many people still live in. Russia has even made it [dangerous to leave](https://www.bbc.com/news/world-europe-60629851). [An official told NPR:](https://www.dailymail.co.uk/news/article-10580113/All-people-die-Zelensky-slams-NATOs-refusal-establish-no-fly-zone.html) 'When the people organised in evacuation points, they [Russians] started attack on evacuation points. Not all the city. Just evacuation points.'
+
+Officially, [as of 9 days ago, 2,400 civilians had been killed](https://www.nytimes.com/2022/03/15/world/europe/mariupol-death-toll-ukraine.html), but this is said to be an underestimate and the actual number of murders may have been as high as 20,000... nine days ago.
+
+Now, I'm just a lowly programming-language designer with no real following on [Twitter](https://twitter.com/DPiepgrass), so I'm venting here.
+
+I have donated to the Red Cross in support of Ukraine [update: reports have said this is not an effective charity], and also to AVD-Info and Meduza in order to help give Russians access to information (the Russian internet is heavily censored, and independent media are banned). For more donation ideas, [see here](https://forum.effectivealtruism.org/posts/qkhoBJRNQT4EFWos7/what-are-effective-ways-to-help-ukrainians-right-now).
+
+[As of 2025, I still find it hard to find effective charities. The most impactful thing you could do is probably to request that your government support Ukraine financially. Trump has cut aid almost to zero, invited Putin to Alaska and proposed restoring economic ties to Russia, which has emboldened Putin to fight harder. I remind people that Putin is wanted by the ICC for mass-kidnapping of Ukrainian children. Don't forget the Bucha massacre, the [genocidal rhetoric](https://www.youtube.com/watch?v=I5yvjyJdDW0), the poison-gas attacks, or the executions on video of Ukrainian POWs. Don't forget the Human Safari (Documentary [one](https://www.youtube.com/watch?v=yaAUV3JmxwM), [two](https://khersonhumansafari.com/), [three](https://www.youtube.com/watch?v=xZ60RwJk88A)). Don't forget that Russia still maintains enormous demands that the Ukrainian people can't accept, including the fortress belt that protects Ukraine from Russian advances in the Donbass region, the Ukrainian-held city of Zaporizhzhia (pre-war population: over 700,000), the Ukrainian-held city of Kherson, two large bridgeheads over the Dnipro river, and most recently, [the Russians claim "Novorussiya"](https://x.com/DPiepgrass/status/1903806027872809231) ― they want two extra provinces, to turn Ukraine into a landlocked country in order to destroy Ukraine's economy. They also want to prevent Ukraine from having effective guarantees against further attacks. Don't forget that Russia destroys every city before taking it, because they don't want infrastructure, they want a Russian empire bordered by a Europe filled with Ukrainian refugees. In short, they continue to insist that Ukraine give up almost everything valuable and place themselves at the mercy of Russia, and this extremism is why they must fail.]
+
+[**Russia will not stop until it is stopped.** Democracies are on the decline globally ― as India, Hungary and Turkey slide into authoritarianism, China prepares to blockade and invade Taiwan, Russia has turned totalitarian, and now Russia wants to destroy yet another democracy after previously invading Chechnya, Georgia, and Crimea. Please care about this. And now, back to 2022:]
+
+Without electricity, reports from Mariupol have been limited, but certainly there is enough information to see that the situation is very bad.
+
+![Mariupol apartment bombed](http://david.loyc.net/misc/ukraine/Mariupol-explosion.webp)
+
+Here you can see the famous Donetsk Academic Regional Drama Theatre, labeled "дети" ("children") in huge letters, which held over 1,000 civilians. Russia bombed it anyway.
+
+![Mariupol theatre](http://david.loyc.net/misc/ukraine/Mariupol-theatre-children.webp)
+![Mariupol theatre before](http://david.loyc.net/misc/ukraine/Mariupol-theatre-children-before.jpg)
+
+For more images and stories from Mariupol, [see here](https://twitter.com/DPiepgrass/status/1506642788074536965).
+
+Meanwhile, I hope you don't live in an apartment in [Borodyanka](https://euromaidanpress.com/2022/03/06/close-the-sky-or-how-russia-bombed-out-my-town-of-borodyanka), near Kyiv...
+
+![Borodyanka 1](http://david.loyc.net/misc/ukraine/central-Borodyanka-after.jpeg)
+![Borodyanka 2](http://david.loyc.net/misc/ukraine/Borodyanka.png)
+
+Or in these other places...
+
+![Before/after](http://david.loyc.net/misc/ukraine/before-after.jpg)
+![Chernihiv](http://david.loyc.net/misc/ukraine/Chernihiv-before-after.webp)
+![Irpin](http://david.loyc.net/misc/ukraine/Irpin-burns.webp)
+![Kharkiv](http://david.loyc.net/misc/ukraine/Kharkiv-firefighters-rubble.webp)
+![Kharkiv](http://david.loyc.net/misc/ukraine/Kharkiv-two-dead.webp)
+
 Benchmarks (in milliseconds for integer keys/values)
 ----------------------------------------------------
 
-- These benchmark results were gathered on my PC in Node v10.4.1, July 2018
+- These benchmark results were gathered on my PC in Node v20.11.1, December 2025
 - `BTree` is 3 to 5 times faster than `SortedMap` and `SortedSet` in the `collections` package
 - `BTree` has similar speed to `RBTree` at smaller sizes, but is faster at very large sizes and uses less memory because it packs many keys into one array instead of allocating an extra heap object for every key.
 - If you need [functional persistence](https://en.wikipedia.org/wiki/Persistent_data_structure), `functional-red-black-tree` is remarkably fast for a persistent tree, but `BTree` should require less memory _unless_ you frequently use `clone/with/without` and are saving snapshots of the old tree to prevent garbage collection.
 - B+ trees normally use less memory than hashtables (such as the standard `Map`), although in JavaScript this is not guaranteed because the B+ tree's memory efficiency depends on avoiding wasted space in the arrays for each node, and JavaScript provides no way to detect or control the capacity of an array's underlying memory area. Also, `Map` should be faster because it does not sort its keys.
-- "Sorted array" refers to `SortedArray<K,V>`, a wrapper class for an array of `[K,V]` pairs. Benchmark results were not gathered for sorted arrays with one million elements (it takes too long)
+- "Sorted array" refers to `SortedArray<K,V>`, a wrapper class for an array of `[K,V]` pairs. Benchmark results were not gathered for sorted arrays with one million elements (it takes too long).
+- "Baseline algorithms" below are typically based on converting the B+ tree to an array (`toArray()`) and doing the operation in that array.
 
-### Insertions at random locations: sorted-btree vs the competition ###
+### Insertions at random locations: sorted-btree vs the competition (millisec) ###
 
-    0.8     Insert 1000 pairs in sorted-btree's BTree
-    0.4     Insert 1000 pairs in sorted-btree's BTree set (no values)
-    2.5     Insert 1000 pairs in collections' SortedMap
-    1.6     Insert 1000 pairs in collections' SortedSet (no values)
-    0.7     Insert 1000 pairs in functional-red-black-tree
-    0.5     Insert 1000 pairs in bintrees' RBTree (no values)
-
-    8.6     Insert 10000 pairs in sorted-btree's BTree
-    5.1     Insert 10000 pairs in sorted-btree's BTree set (no values)
-    37.8    Insert 10000 pairs in collections' SortedMap
-    25.8    Insert 10000 pairs in collections' SortedSet (no values)
-    8.7     Insert 10000 pairs in functional-red-black-tree
-    5.4     Insert 10000 pairs in bintrees' RBTree (no values)
-
-    95.9    Insert 100000 pairs in sorted-btree's BTree
-    69.1    Insert 100000 pairs in sorted-btree's BTree set (no values)
-    564     Insert 100000 pairs in collections' SortedMap
-    366.5   Insert 100000 pairs in collections' SortedSet (no values)
-    192.5   Insert 100000 pairs in functional-red-black-tree
-    107.3   Insert 100000 pairs in bintrees' RBTree (no values)
-
-    1363    Insert 1000000 pairs in sorted-btree's BTree
-    909     Insert 1000000 pairs in sorted-btree's BTree set (no values)
-    8783    Insert 1000000 pairs in collections' SortedMap
-    5443    Insert 1000000 pairs in collections' SortedSet (no values)
-    3356    Insert 1000000 pairs in functional-red-black-tree
-    1581    Insert 1000000 pairs in bintrees' RBTree (no values)
+    1.16    Insert 1000 pairs in sorted-btree's BTree
+    0.39    Insert 1000 pairs in sorted-btree's BTree set (no values)
+    3.07    Insert 1000 pairs in collections' SortedMap
+    2.44    Insert 1000 pairs in collections' SortedSet (no values)
+    1.86    Insert 1000 pairs in functional-red-black-tree
+    1.22    Insert 1000 pairs in bintrees' RBTree (no values)
+    
+    3.25    Insert 10000 pairs in sorted-btree's BTree
+    2.31    Insert 10000 pairs in sorted-btree's BTree set (no values)
+    21.08   Insert 10000 pairs in collections' SortedMap
+    12.66   Insert 10000 pairs in collections' SortedSet (no values)
+    4.14    Insert 10000 pairs in functional-red-black-tree
+    1.84    Insert 10000 pairs in bintrees' RBTree (no values)
+    
+    37.29   Insert 100000 pairs in sorted-btree's BTree
+    27.88   Insert 100000 pairs in sorted-btree's BTree set (no values)
+    329.64  Insert 100000 pairs in collections' SortedMap
+    206.27  Insert 100000 pairs in collections' SortedSet (no values)
+    81.06   Insert 100000 pairs in functional-red-black-tree
+    28.54   Insert 100000 pairs in bintrees' RBTree (no values)
+    
+    625.89  Insert 1000000 pairs in sorted-btree's BTree
+    437.59  Insert 1000000 pairs in sorted-btree's BTree set (no values)
+    5673.62 Insert 1000000 pairs in collections' SortedMap
+    3496.35 Insert 1000000 pairs in collections' SortedSet (no values)
+    1892.51 Insert 1000000 pairs in functional-red-black-tree
+    834.54  Insert 1000000 pairs in bintrees' RBTree (no values)
 
 ### Insert in order, delete: sorted-btree vs the competition ###
 
-    0.6     Insert 1000 sorted pairs in B+ tree
-    0.4     Insert 1000 sorted keys in B+ tree set (no values)
-    0.6     Insert 1000 sorted pairs in collections' SortedMap
-    0.4     Insert 1000 sorted keys in collections' SortedSet (no values)
-    0.7     Insert 1000 sorted pairs in functional-red-black-tree
-    0.5     Insert 1000 sorted keys in bintrees' RBTree (no values)
-    1       Delete every second item in B+ tree
-    3       Delete every second item in B+ tree set
-    1       Bulk-delete every second item in B+ tree set
-    1       Delete every second item in collections' SortedMap
-    1       Delete every second item in collections' SortedSet
-    5       Delete every second item in functional-red-black-tree
-    10      Delete every second item in bintrees' RBTree
-
-    6.5     Insert 10000 sorted pairs in B+ tree
-    3.9     Insert 10000 sorted keys in B+ tree set (no values)
-    6.5     Insert 10000 sorted pairs in collections' SortedMap
-    3.9     Insert 10000 sorted keys in collections' SortedSet (no values)
-    12.4    Insert 10000 sorted pairs in functional-red-black-tree
-    5.8     Insert 10000 sorted keys in bintrees' RBTree (no values)
-    4       Delete every second item in B+ tree
-    4       Delete every second item in B+ tree set
-    3       Bulk-delete every second item in B+ tree set
-    13      Delete every second item in collections' SortedMap
-    7       Delete every second item in collections' SortedSet
-    8       Delete every second item in functional-red-black-tree
-    6       Delete every second item in bintrees' RBTree
-
-    75.9    Insert 100000 sorted pairs in B+ tree
-    45      Insert 100000 sorted keys in B+ tree set (no values)
-    98.7    Insert 100000 sorted pairs in collections' SortedMap
-    61.4    Insert 100000 sorted keys in collections' SortedSet (no values)
-    145.8   Insert 100000 sorted pairs in functional-red-black-tree
-    82.6    Insert 100000 sorted keys in bintrees' RBTree (no values)
-    79      Delete every second item in B+ tree
-    52      Delete every second item in B+ tree set
-    18      Bulk-delete every second item in B+ tree set
-    166     Delete every second item in collections' SortedMap
-    58      Delete every second item in collections' SortedSet
-    64      Delete every second item in functional-red-black-tree
-    74      Delete every second item in bintrees' RBTree
-
-    700     Insert 1000000 sorted pairs in B+ tree
-    452.5   Insert 1000000 sorted keys in B+ tree set (no values)
-    1069    Insert 1000000 sorted pairs in collections' SortedMap
-    864     Insert 1000000 sorted keys in collections' SortedSet (no values)
-    1531    Insert 1000000 sorted pairs in functional-red-black-tree
-    966     Insert 1000000 sorted keys in bintrees' RBTree (no values)
-    435     Delete every second item in B+ tree
-    291     Delete every second item in B+ tree set
-    159     Bulk-delete every second item in B+ tree set
-    1447    Delete every second item in collections' SortedMap
-    796     Delete every second item in collections' SortedSet
-    573     Delete every second item in functional-red-black-tree
-    537     Delete every second item in bintrees' RBTree
+    0.16    Insert 1000 sorted pairs in B+ tree
+    0.14    Insert 1000 sorted keys in B+ tree set (no values)
+    0.4     Insert 1000 sorted pairs in collections' SortedMap
+    0.2     Insert 1000 sorted keys in collections' SortedSet (no values)
+    0.24    Insert 1000 sorted pairs in functional-red-black-tree
+    0.78    Insert 1000 sorted keys in bintrees' RBTree (no values)
+    0.41    Delete every second item in B+ tree
+    0.66    Delete every second item in B+ tree set
+    0.42    Bulk-delete every second item in B+ tree set
+    0.79    Delete every second item in collections' SortedMap
+    0.6     Delete every second item in collections' SortedSet
+    1.66    Delete every second item in functional-red-black-tree
+    1.23    Delete every second item in bintrees' RBTree
+    
+    2.22    Insert 10000 sorted pairs in B+ tree
+    1.52    Insert 10000 sorted keys in B+ tree set (no values)
+    3.28    Insert 10000 sorted pairs in collections' SortedMap
+    2.4     Insert 10000 sorted keys in collections' SortedSet (no values)
+    5.77    Insert 10000 sorted pairs in functional-red-black-tree
+    2.48    Insert 10000 sorted keys in bintrees' RBTree (no values)
+    2.15    Delete every second item in B+ tree
+    2.01    Delete every second item in B+ tree set
+    1.26    Bulk-delete every second item in B+ tree set
+    5.17    Delete every second item in collections' SortedMap
+    4.46    Delete every second item in collections' SortedSet
+    7.33    Delete every second item in functional-red-black-tree
+    1.82    Delete every second item in bintrees' RBTree
+    
+    22.26   Insert 100000 sorted pairs in B+ tree
+    17      Insert 100000 sorted keys in B+ tree set (no values)
+    53.62   Insert 100000 sorted pairs in collections' SortedMap
+    34.65   Insert 100000 sorted keys in collections' SortedSet (no values)
+    70.5    Insert 100000 sorted pairs in functional-red-black-tree
+    29.61   Insert 100000 sorted keys in bintrees' RBTree (no values)
+    18.91   Delete every second item in B+ tree
+    16.52   Delete every second item in B+ tree set
+    5.31    Bulk-delete every second item in B+ tree set
+    50.01   Delete every second item in collections' SortedMap
+    33.12   Delete every second item in collections' SortedSet
+    28.09   Delete every second item in functional-red-black-tree
+    13.79   Delete every second item in bintrees' RBTree
+    
+    239.15  Insert 1000000 sorted pairs in B+ tree
+    194.53  Insert 1000000 sorted keys in B+ tree set (no values)
+    652.82  Insert 1000000 sorted pairs in collections' SortedMap
+    364.85  Insert 1000000 sorted keys in collections' SortedSet (no values)
+    833.39  Insert 1000000 sorted pairs in functional-red-black-tree
+    367.05  Insert 1000000 sorted keys in bintrees' RBTree (no values)
+    177.48  Delete every second item in B+ tree
+    137.5   Delete every second item in B+ tree set
+    43.13   Bulk-delete every second item in B+ tree set
+    407.36  Delete every second item in collections' SortedMap
+    349.39  Delete every second item in collections' SortedSet
+    337.67  Delete every second item in functional-red-black-tree
+    116.74  Delete every second item in bintrees' RBTree
 
 ### Insertions at random locations: sorted-btree vs Array vs Map ###
 
-    0.5     Insert 1000 pairs in sorted array
-    0.6     Insert 1000 pairs in B+ tree
-    0.1     Insert 1000 pairs in ES6 Map (hashtable)
-
-    13.2    Insert 10000 pairs in sorted array
-    7.2     Insert 10000 pairs in B+ tree
-    1.3     Insert 10000 pairs in ES6 Map (hashtable)
-
-    56980   Insert 100000 pairs in sorted array
-    122     Insert 100000 pairs in B+ tree
-    17.7    Insert 100000 pairs in ES6 Map (hashtable)
-
+    0.16    Insert 1000 pairs in sorted array
+    0.2     Insert 1000 pairs in B+ tree
+    0.03    Insert 1000 pairs in ES6 Map (hashtable)
+    
+    6.04    Insert 10000 pairs in sorted array
+    2.66    Insert 10000 pairs in B+ tree
+    0.7     Insert 10000 pairs in ES6 Map (hashtable)
+    
+    1852.77 Insert 100000 pairs in sorted array
+    36.07   Insert 100000 pairs in B+ tree
+    8.64    Insert 100000 pairs in ES6 Map (hashtable)
+    
     SLOW!   Insert 1000000 pairs in sorted array
-    1354    Insert 1000000 pairs in B+ tree
-    304.5   Insert 1000000 pairs in ES6 Map (hashtable)
+    613.34  Insert 1000000 pairs in B+ tree
+    133.13  Insert 1000000 pairs in ES6 Map (hashtable)
 
 ### Insert in order, scan, delete: sorted-btree vs Array vs Map ###
 
-    0.4     Insert 1000 sorted pairs in array
-    0.6     Insert 1000 sorted pairs in B+ tree
-    0.1     Insert 1000 sorted pairs in Map hashtable
-    0       Sum of all values with forEach in sorted array: 27350180
-    0       Sum of all values with forEachPair in B+ tree: 27350180
-    0       Sum of all values with forEach in B+ tree: 27350180
-    0       Sum of all values with iterator in B+ tree: 27350180
-    0       Sum of all values with forEach in Map: 27350180
-    0.1     Delete every second item in sorted array
-    0.1     Delete every second item in B+ tree
-    0       Delete every second item in Map hashtable
-
-    3.9     Insert 10000 sorted pairs in array
-    6.7     Insert 10000 sorted pairs in B+ tree
-    1.3     Insert 10000 sorted pairs in Map hashtable
-    0.2     Sum of all values with forEach in sorted array: 2716659330
-    0.3     Sum of all values with forEachPair in B+ tree: 2716659330
-    0.4     Sum of all values with forEach in B+ tree: 2716659330
-    0.3     Sum of all values with iterator in B+ tree: 2716659330
-    0.2     Sum of all values with forEach in Map: 2716659330
-    1.2     Delete every second item in sorted array
-    1.1     Delete every second item in B+ tree
-    0.3     Delete every second item in Map hashtable
-
-    68.4    Insert 100000 sorted pairs in array
-    72.7    Insert 100000 sorted pairs in B+ tree
-    18.4    Insert 100000 sorted pairs in Map hashtable
-    2.5     Sum of all values with forEach in sorted array: 275653049020
-    3.3     Sum of all values with forEachPair in B+ tree: 275653049020
-    4.5     Sum of all values with forEach in B+ tree: 275653049020
-    2.8     Sum of all values with iterator in B+ tree: 275653049020
-    2.2     Sum of all values with forEach in Map: 275653049020
-    2420    Delete every second item in sorted array
-    14.4    Delete every second item in B+ tree
-    3.7     Delete every second item in Map hashtable
-
-    969     Insert 1000000 sorted pairs in array
-    773     Insert 1000000 sorted pairs in B+ tree
-    305.5   Insert 1000000 sorted pairs in Map hashtable
-    25.3    Sum of all values with forEach in sorted array: 27510295368690
-    32.4    Sum of all values with forEachPair in B+ tree: 27510295368690
-    46.1    Sum of all values with forEach in B+ tree: 27510295368690
-    29.9    Sum of all values with iterator in B+ tree: 27510295368690
-    22      Sum of all values with forEach in Map: 27510295368690
+    0.16    Insert 1000 sorted pairs in array
+    0.27    Insert 1000 sorted pairs in B+ tree
+    0.09    Insert 1000 sorted pairs in Map hashtable
+    0.03    Sum of all values with forEach in sorted array: 27414400
+    0.09    Sum of all values with forEachPair in B+ tree: 27414400
+    0.1     Sum of all values with forEach in B+ tree: 27414400
+    0.18    Sum of all values with iterator in B+ tree: 27414400
+    0.03    Sum of all values with forEach in Map: 27414400
+    0.19    Delete every second item in sorted array
+    0.32    Delete every second item in B+ tree
+    0.06    Delete every second item in Map hashtable
+    
+    1.48    Insert 10000 sorted pairs in array
+    2.02    Insert 10000 sorted pairs in B+ tree
+    0.7     Insert 10000 sorted pairs in Map hashtable
+    0.17    Sum of all values with forEach in sorted array: 2727131580
+    0.13    Sum of all values with forEachPair in B+ tree: 2727131580
+    0.15    Sum of all values with forEach in B+ tree: 2727131580
+    1.05    Sum of all values with iterator in B+ tree: 2727131580
+    0.11    Sum of all values with forEach in Map: 2727131580
+    0.36    Delete every second item in sorted array
+    0.62    Delete every second item in B+ tree
+    0.18    Delete every second item in Map hashtable
+    
+    16.46   Insert 100000 sorted pairs in array
+    23.9    Insert 100000 sorted pairs in B+ tree
+    8.07    Insert 100000 sorted pairs in Map hashtable
+    0.95    Sum of all values with forEach in sorted array: 274463815510
+    1.4     Sum of all values with forEachPair in B+ tree: 274463815510
+    1.37    Sum of all values with forEach in B+ tree: 274463815510
+    1.61    Sum of all values with iterator in B+ tree: 274463815510
+    0.82    Sum of all values with forEach in Map: 274463815510
+    1478.85 Delete every second item in sorted array
+    7.69    Delete every second item in B+ tree
+    2.32    Delete every second item in Map hashtable
+    
+    298.73  Insert 1000000 sorted pairs in array
+    241.94  Insert 1000000 sorted pairs in B+ tree
+    125.53  Insert 1000000 sorted pairs in Map hashtable
+    12.13   Sum of all values with forEach in sorted array: 27511905926210
+    15.43   Sum of all values with forEachPair in B+ tree: 27511905926210
+    15.72   Sum of all values with forEach in B+ tree: 27511905926210
+    13.65   Sum of all values with iterator in B+ tree: 27511905926210
+    8.72    Sum of all values with forEach in Map: 27511905926210
     SLOW!   Delete every second item in sorted array
-    305.5   Delete every second item in B+ tree
-    95.6    Delete every second item in Map hashtable
+    79.73   Delete every second item in B+ tree
+    85.45   Delete every second item in Map hashtable
+
+### BTree.diffAgainst() ###
+
+    0.3     BTree.diffAgainst 1000 pairs vs 100 pairs
+    0.83    BTree.diffAgainst 10000 pairs vs 100 pairs
+    0.18    BTree.diffAgainst 10000 pairs vs 1000 pairs
+    1.15    BTree.diffAgainst 100000 pairs vs 100 pairs
+    2.29    BTree.diffAgainst 100000 pairs vs 1000 pairs
+    1.31    BTree.diffAgainst 100000 pairs vs 10000 pairs
+    13.04   BTree.diffAgainst 1000000 pairs vs 100 pairs
+    13.14   BTree.diffAgainst 1000000 pairs vs 1000 pairs
+    14.12   BTree.diffAgainst 1000000 pairs vs 10000 pairs
+    15.79   BTree.diffAgainst 1000000 pairs vs 100000 pairs
+    
+    0.03    BTree.diffAgainst 100 pairs vs cloned copy with 100 extra pairs
+    0.14    BTree.diffAgainst 100 pairs vs cloned copy with 1000 extra pairs
+    0.31    BTree.diffAgainst 100 pairs vs cloned copy with 10000 extra pairs
+    2.09    BTree.diffAgainst 100 pairs vs cloned copy with 100000 extra pairs
+    26.64   BTree.diffAgainst 100 pairs vs cloned copy with 1000000 extra pairs
+    0.15    BTree.diffAgainst 1000 pairs vs cloned copy with 100 extra pairs
+    0.27    BTree.diffAgainst 1000 pairs vs cloned copy with 1000 extra pairs
+    0.39    BTree.diffAgainst 1000 pairs vs cloned copy with 10000 extra pairs
+    2.29    BTree.diffAgainst 1000 pairs vs cloned copy with 100000 extra pairs
+    29.45   BTree.diffAgainst 1000 pairs vs cloned copy with 1000000 extra pairs
+    0.09    BTree.diffAgainst 10000 pairs vs cloned copy with 100 extra pairs
+    0.4     BTree.diffAgainst 10000 pairs vs cloned copy with 1000 extra pairs
+    0.58    BTree.diffAgainst 10000 pairs vs cloned copy with 10000 extra pairs
+    2.99    BTree.diffAgainst 10000 pairs vs cloned copy with 100000 extra pairs
+    29.59   BTree.diffAgainst 10000 pairs vs cloned copy with 1000000 extra pairs
+    0.2     BTree.diffAgainst 100000 pairs vs cloned copy with 100 extra pairs
+    1.02    BTree.diffAgainst 100000 pairs vs cloned copy with 1000 extra pairs
+    3.71    BTree.diffAgainst 100000 pairs vs cloned copy with 10000 extra pairs
+    7.58    BTree.diffAgainst 100000 pairs vs cloned copy with 100000 extra pairs
+    34.55   BTree.diffAgainst 100000 pairs vs cloned copy with 1000000 extra pairs
+    0.38    BTree.diffAgainst 1000000 pairs vs cloned copy with 100 extra pairs
+    4.29    BTree.diffAgainst 1000000 pairs vs cloned copy with 1000 extra pairs
+    18.86   BTree.diffAgainst 1000000 pairs vs cloned copy with 10000 extra pairs
+    48.21   BTree.diffAgainst 1000000 pairs vs cloned copy with 100000 extra pairs
+    90.29   BTree.diffAgainst 1000000 pairs vs cloned copy with 1000000 extra pairs
+
+### Accelerated union of B+ trees (vs non-accelerated baseline algorithm) ###
+
+#### Adjacent ranges (one intersection point)
+
+    0.04    union():  Union 100+100 trees with 1 keys overlaping
+            union():  6/10 shared nodes, 0/10 underfilled nodes, 65.00% average load factor
+    0.2     union():  Union 1000+1000 trees with 1 keys overlaping
+            union():  62/70 shared nodes, 0/70 underfilled nodes, 92.32% average load factor
+    0.22    union():  Union 10000+10000 trees with 1 keys overlaping
+            union():  641/650 shared nodes, 0/650 underfilled nodes, 99.27% average load factor
+    0.1     union():  Union 100000+100000 trees with 1 keys overlaping
+            union():  6446/6459 shared nodes, 0/6459 underfilled nodes, 99.89% average load factor
+
+#### 10% overlap
+
+    0.01    union():  Union trees with 10% overlap (100+100 keys)
+            union():  6/9 shared nodes, 0/9 underfilled nodes, 68.75% average load factor
+    0.02    baseline: Union trees with 10% overlap (100+100 keys)
+            baseline: 2/7 shared nodes, 0/7 underfilled nodes, 87.50% average load factor
+    0.03    union():  Union trees with 10% overlap (1000+1000 keys)
+            union():  56/66 shared nodes, 0/66 underfilled nodes, 93.04% average load factor
+    0.21    baseline: Union trees with 10% overlap (1000+1000 keys)
+            baseline: 28/63 shared nodes, 0/63 underfilled nodes, 97.32% average load factor
+    0.12    union():  Union trees with 10% overlap (10000+10000 keys)
+            union():  578/630 shared nodes, 0/630 underfilled nodes, 97.37% average load factor
+    2.33    baseline: Union trees with 10% overlap (10000+10000 keys)
+            baseline: 289/614 shared nodes, 0/614 underfilled nodes, 99.82% average load factor
+    1.42    union():  Union trees with 10% overlap (100000+100000 keys)
+            union():  5803/6276 shared nodes, 0/6276 underfilled nodes, 97.73% average load factor
+    24.69   baseline: Union trees with 10% overlap (100000+100000 keys)
+            baseline: 2901/6131 shared nodes, 0/6131 underfilled nodes, 99.97% average load factor
+
+#### Large sparse-overlap trees (1M keys each, 10 overlaps per 100k)
+
+    0.5     union():  Union 1000000+1000000 sparse-overlap trees
+            union():  64461/64552 shared nodes, 0/64552 underfilled nodes, 99.94% average load factor
+    288.2   baseline: Union 1000000+1000000 sparse-overlap trees
+            baseline: 32223/64516 shared nodes, 0/64516 underfilled nodes, 100.00% average load factor
+    
+### Subtraction of B+ trees (vs non-accelerated baseline algorithm) ###
+
+#### Non-overlapping ranges (nothing removed)
+
+    0.01    subtract: Subtract 100+100 disjoint trees
+            subtract: 4/5 shared nodes, 0/5 underfilled nodes, 65.00% average load factor
+    0.02    baseline: Subtract 100+100 disjoint trees
+            baseline: 4/5 shared nodes, 0/5 underfilled nodes, 65.00% average load factor
+    0.01    subtract: Subtract 1000+1000 disjoint trees
+            subtract: 33/33 shared nodes, 0/33 underfilled nodes, 97.73% average load factor
+    0.18    baseline: Subtract 1000+1000 disjoint trees
+            baseline: 32/33 shared nodes, 0/33 underfilled nodes, 97.73% average load factor
+    0.01    subtract: Subtract 10000+10000 disjoint trees
+            subtract: 323/324 shared nodes, 0/324 underfilled nodes, 99.57% average load factor
+    0.38    baseline: Subtract 10000+10000 disjoint trees
+            baseline: 323/324 shared nodes, 0/324 underfilled nodes, 99.57% average load factor
+    0.01    subtract: Subtract 100000+100000 disjoint trees
+            subtract: 3227/3228 shared nodes, 0/3228 underfilled nodes, 99.93% average load factor
+    2.55    baseline: Subtract 100000+100000 disjoint trees
+            baseline: 3227/3228 shared nodes, 0/3228 underfilled nodes, 99.93% average load factor
+
+#### Partial overlap (middle segment removed)
+
+    0.03    subtract: Subtract 100+50 partially overlapping trees
+            subtract: 1/3 shared nodes, 0/3 underfilled nodes, 54.17% average load factor
+    0.03    baseline: Subtract 100+50 partially overlapping trees
+            baseline: 1/3 shared nodes, 0/3 underfilled nodes, 54.17% average load factor
+    0.23    subtract: Subtract 1000+500 partially overlapping trees
+            subtract: 15/18 shared nodes, 0/18 underfilled nodes, 89.76% average load factor
+    0.31    baseline: Subtract 1000+500 partially overlapping trees
+            baseline: 15/18 shared nodes, 1/18 underfilled nodes, 89.76% average load factor
+    0.94    subtract: Subtract 10000+5000 partially overlapping trees
+            subtract: 159/164 shared nodes, 0/164 underfilled nodes, 98.38% average load factor
+    2.12    baseline: Subtract 10000+5000 partially overlapping trees
+            baseline: 160/163 shared nodes, 0/163 underfilled nodes, 98.96% average load factor
+    3.82    subtract: Subtract 100000+50000 partially overlapping trees
+            subtract: 1608/1619 shared nodes, 0/1619 underfilled nodes, 99.63% average load factor
+    17.3    baseline: Subtract 100000+50000 partially overlapping trees
+            baseline: 1610/1616 shared nodes, 0/1616 underfilled nodes, 99.81% average load factor
+
+#### Interleaved keys (every other key removed)
+
+    0.02    subtract: Subtract 200-100 interleaved trees
+            subtract: 0/6 shared nodes, 0/6 underfilled nodes, 54.69% average load factor
+    0.08    baseline: Subtract 200-100 interleaved trees
+            baseline: 0/5 shared nodes, 1/5 underfilled nodes, 65.00% average load factor
+    0.15    subtract: Subtract 2000-1000 interleaved trees
+            subtract: 0/47 shared nodes, 0/47 underfilled nodes, 69.55% average load factor
+    0.54    baseline: Subtract 2000-1000 interleaved trees
+            baseline: 0/33 shared nodes, 0/33 underfilled nodes, 97.73% average load factor
+    1.94    subtract: Subtract 20000-10000 interleaved trees
+            subtract: 0/463 shared nodes, 0/463 underfilled nodes, 70.61% average load factor
+    3.14    baseline: Subtract 20000-10000 interleaved trees
+            baseline: 0/324 shared nodes, 0/324 underfilled nodes, 99.57% average load factor
+    20.97   subtract: Subtract 200000-100000 interleaved trees
+            subtract: 0/4636 shared nodes, 0/4636 underfilled nodes, 70.53% average load factor
+    39.68   baseline: Subtract 200000-100000 interleaved trees
+            baseline: 0/3229 shared nodes, 2/3229 underfilled nodes, 99.90% average load factor
+
+#### Large sparse-overlap trees (1M keys each, 10 overlaps per 100k)
+
+    0.25    subtract: Subtract 1000000+1000000 sparse-overlap trees
+            subtract: 32208/32291 shared nodes, 0/32291 underfilled nodes, 99.89% average load factor
+    49.97   baseline: Subtract 1000000+1000000 sparse-overlap trees
+            baseline: 32228/32259 shared nodes, 0/32259 underfilled nodes, 99.99% average load factor
+
+### Intersection between B+ trees (vs non-accelerated baseline algorithm) ###
+
+#### Non-overlapping ranges (no shared keys)
+
+    0.01    intersect: Intersect 100+100 disjoint trees
+            intersect: 0/0 shared nodes, 0/0 underfilled nodes, 0.00% average load factor
+    0.04    baseline:  Intersect 100+100 disjoint trees
+            baseline:  0/0 shared nodes, 0/0 underfilled nodes, 0.00% average load factor
+    0.01    intersect: Intersect 1000+1000 disjoint trees
+            intersect: 0/0 shared nodes, 0/0 underfilled nodes, 0.00% average load factor
+    0.08    baseline:  Intersect 1000+1000 disjoint trees
+            baseline:  0/0 shared nodes, 0/0 underfilled nodes, 0.00% average load factor
+    0       intersect: Intersect 10000+10000 disjoint trees
+            intersect: 0/0 shared nodes, 0/0 underfilled nodes, 0.00% average load factor
+    0.57    baseline:  Intersect 10000+10000 disjoint trees
+            baseline:  0/0 shared nodes, 0/0 underfilled nodes, 0.00% average load factor
+    0       intersect: Intersect 100000+100000 disjoint trees
+            intersect: 0/0 shared nodes, 0/0 underfilled nodes, 0.00% average load factor
+    10.02   baseline:  Intersect 100000+100000 disjoint trees
+            baseline:  0/0 shared nodes, 0/0 underfilled nodes, 0.00% average load factor
+
+#### Partial overlap (middle segment shared)
+
+    0.02    intersect: Intersect 100+50 partially overlapping trees
+            intersect: 0/3 shared nodes, 0/3 underfilled nodes, 54.17% average load factor
+    0.02    baseline:  Intersect 100+50 partially overlapping trees
+            baseline:  0/3 shared nodes, 0/3 underfilled nodes, 54.17% average load factor
+    0.14    intersect: Intersect 1000+500 partially overlapping trees
+            intersect: 0/21 shared nodes, 0/21 underfilled nodes, 77.38% average load factor
+    0.51    baseline:  Intersect 1000+500 partially overlapping trees
+            baseline:  0/17 shared nodes, 0/17 underfilled nodes, 94.85% average load factor
+    0.62    intersect: Intersect 10000+5000 partially overlapping trees
+            intersect: 0/202 shared nodes, 0/202 underfilled nodes, 80.46% average load factor
+    1.71    baseline:  Intersect 10000+5000 partially overlapping trees
+            baseline:  0/163 shared nodes, 0/163 underfilled nodes, 98.96% average load factor
+    4.65    intersect: Intersect 100000+50000 partially overlapping trees
+            intersect: 0/2002 shared nodes, 0/2002 underfilled nodes, 81.17% average load factor
+    17.16   baseline:  Intersect 100000+50000 partially overlapping trees
+            baseline:  0/1615 shared nodes, 0/1615 underfilled nodes, 99.87% average load factor
+
+#### Interleaved keys (every other key shared)
+
+    0.01    intersect: Intersect 200+100 interleaved trees
+            intersect: 0/5 shared nodes, 0/5 underfilled nodes, 65.00% average load factor
+    0.02    baseline:  Intersect 200+100 interleaved trees
+            baseline:  0/5 shared nodes, 0/5 underfilled nodes, 65.00% average load factor
+    0.17    intersect: Intersect 2000+1000 interleaved trees
+            intersect: 0/42 shared nodes, 0/42 underfilled nodes, 77.46% average load factor
+    0.28    baseline:  Intersect 2000+1000 interleaved trees
+            baseline:  0/33 shared nodes, 0/33 underfilled nodes, 97.73% average load factor
+    1.11    intersect: Intersect 20000+10000 interleaved trees
+            intersect: 0/401 shared nodes, 0/401 underfilled nodes, 81.05% average load factor
+    3.16    baseline:  Intersect 20000+10000 interleaved trees
+            baseline:  0/324 shared nodes, 0/324 underfilled nodes, 99.57% average load factor
+    12.65   intersect: Intersect 200000+100000 interleaved trees
+            intersect: 0/4002 shared nodes, 0/4002 underfilled nodes, 81.21% average load factor
+    73.05   baseline:  Intersect 200000+100000 interleaved trees
+            baseline:  0/3228 shared nodes, 0/3228 underfilled nodes, 99.93% average load factor
+
+#### Large sparse-overlap trees (1M keys each, 10 overlaps per 100k)
+
+    0.02    intersect: Intersect 1000000+1000000 sparse-overlap trees
+            intersect: 0/5 shared nodes, 0/5 underfilled nodes, 65.00% average load factor
+    327.57  baseline:  Intersect 1000000+1000000 sparse-overlap trees
+            baseline:  0/5 shared nodes, 0/5 underfilled nodes, 65.00% average load factor
+
+### forEachKeyInBoth ###
+
+#### Non-overlapping ranges (no shared keys)
+
+    0       forEachKeyInBoth: [count=0, checksum=0]
+    0       forEachKeyInBoth: [count=0, checksum=0]
+    0       forEachKeyInBoth: [count=0, checksum=0]
+    0       forEachKeyInBoth: [count=0, checksum=0]
+
+#### 50% overlapping ranges
+
+    0.01    forEachKeyInBoth: [count=50, checksum=11175]
+    0.09    forEachKeyInBoth: [count=500, checksum=1124250]
+    0.89    forEachKeyInBoth: [count=5000, checksum=112492500]
+    2.14    forEachKeyInBoth: [count=50000, checksum=11249925000]
+
+#### Random overlaps (~10% shared keys)
+
+    0.01    forEachKeyInBoth: [count=22, checksum=70248]
+    0.09    forEachKeyInBoth: [count=252, checksum=7524384]
+    1.32    forEachKeyInBoth: [count=2409, checksum=772269240]
+    9.69    forEachKeyInBoth: [count=24895, checksum=80459452812]
+
+#### Large sparse-overlap trees (1M keys each, 10 overlaps per 100k)
+
+    0.01    forEachKeyInBoth: [count=100, checksum=360003600]
+
+### forEachKeyNotIn ###
+
+#### Non-overlapping ranges (all keys survive)
+
+    0.02    forEachKeyNotIn: [count=100, checksum=4950]
+    0.41    forEachKeyNotIn: [count=1000, checksum=499500]
+    3.04    forEachKeyNotIn: [count=10000, checksum=49995000]
+    4.93    forEachKeyNotIn: [count=100000, checksum=4999950000]
+
+#### 50% overlapping ranges
+
+    0.03    forEachKeyNotIn: [count=50, checksum=1225]
+    0.18    forEachKeyNotIn: [count=500, checksum=124750]
+    0.99    forEachKeyNotIn: [count=5000, checksum=12497500]
+    7.02    forEachKeyNotIn: [count=50000, checksum=1249975000]
+
+#### Random overlaps (~10% of include removed)
+
+    0.01    forEachKeyNotIn: [count=67, checksum=83085]
+    0.07    forEachKeyNotIn: [count=743, checksum=10109320]
+    1.5     forEachKeyNotIn: [count=7492, checksum=1035797435]
+    8.29    forEachKeyNotIn: [count=75400, checksum=104318180340]
+
+#### Large sparse-overlap trees (1M keys each, 10 overlaps per 100k)
+
+    33.03   forEachKeyNotIn: [count=999900, checksum=499954499550]
 
 Version history
 ---------------
 
-### v2.0.0 ###
+### v2.1.0 ###
 
 - Introduced the new `sorted-btree/extended` entry point that holds `BTreeEx`. The default `sorted-btree` export stays lean (tree-shakable) while the extended build keeps parity with the old API surface.
+  - Thanks to Microsoft, Taylor Williams and Craig Macomber for these new features.
 - Added a dedicated `sorted-btree/extended/diffAgainst` entry so apps can import just the standalone diff helper without pulling in `BTreeEx`.
 - **Breaking change:** `diffAgainst` is no longer available on the default `BTree` export. Switch to `BTreeEx#diffAgainst` (imported from `sorted-btree/extended`) or the standalone `diffAgainst(treeA, treeB, ...)` helper to continue using the diff API.
+- `checkValid` now has a parameter `checkOrdering = false` for more thorough checking
 
 ### v1.8.0 ###
 

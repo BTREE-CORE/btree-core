@@ -1,7 +1,10 @@
 const fs = require('fs');
 const path = require('path');
 const zlib = require('zlib');
-
+//
+// This script prints out a size report with raw, minified, and gzipped sizes of the JS modules.
+//     Usage: node scripts\size-report.js 
+//
 const rootDir = path.resolve(__dirname, '..');
 const extendedDir = path.join(rootDir, 'extended');
 
@@ -26,8 +29,7 @@ function discoverExtendedEntries() {
 }
 
 const entryPoints = [{ name: 'btree', raw: 'b+tree.js', min: 'b+tree.min.js' }, ...discoverExtendedEntries()];
-const nameColumnWidth =
-  Math.max('Entry'.length, ...entryPoints.map((entry) => entry.name.length)) + 2;
+const nameColumnWidth = 30;
 
 function fileSize(relativePath) {
   const filePath = path.join(rootDir, relativePath);
@@ -67,14 +69,13 @@ function pad(str, length) {
 
 const header =
   pad('Entry', nameColumnWidth) +
-  pad('Raw Size', 13) +
+  pad('Raw JS Size', 13) +
   pad('Minified', 13) +
   'Gzipped';
 console.log(header);
 console.log('-'.repeat(header.length));
 
-const btreeExTransitive = { raw: 0, min: 0, gz: 0 };
-const btreeExTransitiveHasValue = { raw: false, min: false, gz: false };
+const btreeExTransitive = { raw: null, min: null, gz: null };
 
 entryPoints.forEach((entry, index) => {
   const raw = fileSize(entry.raw);
@@ -85,29 +86,25 @@ entryPoints.forEach((entry, index) => {
     pad(formatBytes(raw), 13) +
     pad(formatBytes(min), 13) +
     formatBytes(gz);
+
   console.log(line);
-  if (index > 0) {
-    if (typeof raw === 'number') {
-      btreeExTransitive.raw += raw;
-      btreeExTransitiveHasValue.raw = true;
-    }
-    if (typeof min === 'number') {
-      btreeExTransitive.min += min;
-      btreeExTransitiveHasValue.min = true;
-    }
-    if (typeof gz === 'number') {
-      btreeExTransitive.gz += gz;
-      btreeExTransitiveHasValue.gz = true;
-    }
+
+  if (index > 0) { // exclude BTree.ts from transitive
+    if (raw)
+      btreeExTransitive.raw = (btreeExTransitive.raw || 0) + raw;
+    if (min)
+      btreeExTransitive.min = (btreeExTransitive.min || 0) + min;
+    if (gz)
+      btreeExTransitive.gz = (btreeExTransitive.gz || 0) + gz;
   }
 });
 
 if (entryPoints.length > 1) {
   const line =
-    pad('BTreeEx transitive', nameColumnWidth) +
-    pad(btreeExTransitiveHasValue.raw ? formatBytes(btreeExTransitive.raw) : 'n/a', 13) +
-    pad(btreeExTransitiveHasValue.min ? formatBytes(btreeExTransitive.min) : 'n/a', 13) +
-    (btreeExTransitiveHasValue.gz ? formatBytes(btreeExTransitive.gz) : 'n/a');
+    pad('BTreeEx transitive excl. BTree', nameColumnWidth) +
+    pad(formatBytes(btreeExTransitive.raw), 13) +
+    pad(formatBytes(btreeExTransitive.min), 13) +
+        formatBytes(btreeExTransitive.gz);
   console.log('-'.repeat(header.length));
   console.log(line);
 }

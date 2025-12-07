@@ -555,10 +555,9 @@ console.log("### forEachKeyInBoth");
     tree1: BTreeEx<number, number>,
     tree2: BTreeEx<number, number>,
     forEachKeyInBothLabel = 'forEachKeyInBoth()',
-    baselineLabel = 'sort baseline'
   ) => {
     measure<{count: number, checksum: number }>(
-      result => `${baseTitle} using ${forEachKeyInBothLabel} [count=${result.count}, checksum=${result.checksum}]`,
+      result => `forEachKeyInBoth: [count=${result.count}, checksum=${result.checksum}]`,
       function runForEachKeyInBoth() {
         let count = 0;
         let checksum = 0;
@@ -569,7 +568,7 @@ console.log("### forEachKeyInBoth");
         return { count, checksum };
       });
     measure<{count: number, checksum: number }>(
-      result => `${baseTitle} using ${baselineLabel} [count=${result.count}, checksum=${result.checksum}]`,
+      result => `Baseline method:  [count=${result.count}, checksum=${result.checksum}]`,
       function runBaseline() {
         let count = 0;
         let checksum = 0;
@@ -599,7 +598,7 @@ console.log("### forEachKeyNotIn");
     excludeTree: BTreeEx<number, number>,
   ) => {
     measure<{count: number, checksum: number }>(
-      result => `forEachKeyNotIn: ${baseTitle} [count=${result.count}, checksum=${result.checksum}]`,
+      result => `forEachKeyNotIn: [count=${result.count}, checksum=${result.checksum}]`,
       function runForEachKeyNotIn() {
         let count = 0;
         let checksum = 0;
@@ -610,7 +609,7 @@ console.log("### forEachKeyNotIn");
         return { count, checksum };
       });
     measure<{count: number, checksum: number }>(
-      result => `baseline method: ${baseTitle} [count=${result.count}, checksum=${result.checksum}]`,
+      result => `baseline method: [count=${result.count}, checksum=${result.checksum}]`,
       function runBaseline() {
         let count = 0;
         let checksum = 0;
