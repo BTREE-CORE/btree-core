@@ -1,6 +1,7 @@
 import BTree, { IMap } from '../b+tree';
 import SortedArray from '../sorted-array';
 import MersenneTwister from 'mersenne-twister';
+import BTreeEx from '../extended';
 export declare const compareNumbers: (a: number, b: number) => number;
 export declare type TreeNodeStats = {
     total: number;
@@ -25,7 +26,7 @@ export declare type FuzzCase = {
     removalLabel: string;
 };
 export declare function countTreeNodeStats<K, V>(tree: BTree<K, V>): TreeNodeStats;
-export declare function logTreeNodeStats(label: string, stats: TreeNodeStats): void;
+export declare function logTreeNodeStats(prefix: string, stats: BTreeEx | TreeNodeStats): void;
 export declare function randInt(max: number): number;
 export declare function expectTreeEqualTo<K, V>(tree: BTree<K, V>, list: SortedArray<K, V>): void;
 export declare function addToBoth<K, V>(a: IMap<K, V>, b: IMap<K, V>, k: K, v: V): void;

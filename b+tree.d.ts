@@ -413,10 +413,10 @@ export default class BTree<K = any, V = any> implements ISortedMapF<K, V>, ISort
     /** Returns true if the tree appears to be frozen. */
     get isFrozen(): boolean;
     /** Scans the tree for signs of serious bugs (e.g. this.size doesn't match
-     *  number of elements, internal nodes not caching max element properly...)
-     *  Computational complexity: O(number of nodes), i.e. O(size). This method
-     *  validates cached size information and, optionally, the ordering of
-     *  keys (including leaves), which takes more time to check. */
+     *  number of elements, internal nodes not caching max element properly...).
+     *  Computational complexity: O(number of nodes). This method validates cached size
+     *  information and, optionally, the ordering of keys (including leaves), which
+     *  takes more time to check (O(size), which is technically the same big-O). */
     checkValid(checkOrdering?: boolean): void;
 }
 /** A TypeScript helper function that simply returns its argument, typed as

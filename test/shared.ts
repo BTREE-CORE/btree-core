@@ -2,6 +2,7 @@ import BTree, { BNode, BNodeInternal, IMap } from '../b+tree';
 import SortedArray from '../sorted-array';
 import MersenneTwister from 'mersenne-twister';
 import type { BTreeWithInternals } from '../extended/shared';
+import BTreeEx from '../extended';
 
 const rand = new MersenneTwister(1234);
 export const compareNumbers = (a: number, b: number) => a - b;
@@ -81,11 +82,13 @@ export function countTreeNodeStats<K, V>(tree: BTree<K, V>): TreeNodeStats {
   };
 }
 
-export function logTreeNodeStats(label: string, stats: TreeNodeStats): void {
-  console.log(`\tShared nodes (${label}): ${stats.shared}/${stats.total}`);
-  console.log(`\tUnderfilled nodes (${label}): ${stats.newUnderfilled}/${stats.total}`);
+export function logTreeNodeStats(prefix: string, stats: BTreeEx|TreeNodeStats): void {
+  if (stats instanceof BTree)
+    stats = countTreeNodeStats(stats);
+  
   const percent = (stats.averageLoadFactor * 100).toFixed(2);
-  console.log(`\tAverage load factor (${label}): ${percent}%`);
+  console.log(`\t${prefix} ${stats.shared}/${stats.total} shared nodes, ` + 
+    `${stats.newUnderfilled}/${stats.total} underfilled nodes, ${percent}% average load factor`);
 }
 
 export function randInt(max: number): number {

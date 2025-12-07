@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.forEachFuzzCase = exports.expectTreeMatchesEntries = exports.applyRemovalRunsToTree = exports.populateFuzzTrees = exports.buildEntriesFromMap = exports.randomInt = exports.makeArray = exports.addToBoth = exports.expectTreeEqualTo = exports.randInt = exports.logTreeNodeStats = exports.countTreeNodeStats = exports.compareNumbers = void 0;
+var b_tree_1 = __importDefault(require("../b+tree"));
 var mersenne_twister_1 = __importDefault(require("mersenne-twister"));
 var rand = new mersenne_twister_1.default(1234);
 var compareNumbers = function (a, b) { return a - b; };
@@ -48,11 +49,12 @@ function countTreeNodeStats(tree) {
     };
 }
 exports.countTreeNodeStats = countTreeNodeStats;
-function logTreeNodeStats(label, stats) {
-    console.log("\tShared nodes (".concat(label, "): ").concat(stats.shared, "/").concat(stats.total));
-    console.log("\tUnderfilled nodes (".concat(label, "): ").concat(stats.newUnderfilled, "/").concat(stats.total));
+function logTreeNodeStats(prefix, stats) {
+    if (stats instanceof b_tree_1.default)
+        stats = countTreeNodeStats(stats);
     var percent = (stats.averageLoadFactor * 100).toFixed(2);
-    console.log("\tAverage load factor (".concat(label, "): ").concat(percent, "%"));
+    console.log("\t".concat(prefix, " ").concat(stats.shared, "/").concat(stats.total, " shared nodes, ") +
+        "".concat(stats.newUnderfilled, "/").concat(stats.total, " underfilled nodes, ").concat(percent, "% average load factor"));
 }
 exports.logTreeNodeStats = logTreeNodeStats;
 function randInt(max) {

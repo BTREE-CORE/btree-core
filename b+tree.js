@@ -822,10 +822,10 @@ var BTree = /** @class */ (function () {
         configurable: true
     });
     /** Scans the tree for signs of serious bugs (e.g. this.size doesn't match
-     *  number of elements, internal nodes not caching max element properly...)
-     *  Computational complexity: O(number of nodes), i.e. O(size). This method
-     *  validates cached size information and, optionally, the ordering of
-     *  keys (including leaves), which takes more time to check. */
+     *  number of elements, internal nodes not caching max element properly...).
+     *  Computational complexity: O(number of nodes). This method validates cached size
+     *  information and, optionally, the ordering of keys (including leaves), which
+     *  takes more time to check (O(size), which is technically the same big-O). */
     BTree.prototype.checkValid = function (checkOrdering) {
         if (checkOrdering === void 0) { checkOrdering = false; }
         var size = this._root.checkValid(0, this, 0, checkOrdering)[0];
