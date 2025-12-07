@@ -9,7 +9,6 @@ export class BTreeEx<K = any, V = any> extends BTree<K, V> {
     const result = new BTreeEx<K, V>(undefined, this._compare, this._maxNodeSize);
     const target = result as unknown as BTreeWithInternals<K, V>;
     target._root = source._root;
-    target._size = source._size;
     return result as this;
   }
 
@@ -18,7 +17,6 @@ export class BTreeEx<K = any, V = any> extends BTree<K, V> {
     const result = new BTreeEx<K, V>(undefined, this._compare, this._maxNodeSize);
     const target = result as unknown as BTreeWithInternals<K, V>;
     target._root = source._root.greedyClone(force);
-    target._size = source._size;
     return result as this;
   }
 

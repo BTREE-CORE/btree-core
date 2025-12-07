@@ -1,4 +1,4 @@
-import BTree, {IMap, defaultComparator, simpleComparator} from './b+tree';
+import BTree, { IMap, defaultComparator, simpleComparator, areOverlapping } from './b+tree';
 import BTreeEx from './extended';
 import diffAgainst from './extended/diffAgainst';
 import SortedArray from './sorted-array';
@@ -163,6 +163,39 @@ function testComparison<T>(comparison: (a: T, b: T) => number, inOrder: T[], val
     expect(asymmetric).toEqual([]);
   });
 }
+
+describe('areOverlapping', () =>
+{
+  const cmp: (a: number, b: number) => number = simpleComparator;
+
+  const overlappingCases: { name: string, a: [number, number], b: [number, number] }[] = [
+    { name: 'aMax inside B (A starts before B)', a: [0, 5], b: [3, 8] },
+    { name: 'aMin inside B (A ends after B)', a: [4, 12], b: [1, 7] },
+    { name: 'A encloses B', a: [0, 10], b: [3, 7] },
+    { name: 'B encloses A', a: [4, 6], b: [1, 10] },
+    { name: 'shared boundary counts as overlap', a: [2, 6], b: [6, 9] },
+    { name: 'identical ranges overlap', a: [5, 5], b: [5, 5] },
+  ];
+
+  overlappingCases.forEach(({ name, a, b }) => {
+    test(name, () => {
+      expect(areOverlapping(a[0], a[1], b[0], b[1], cmp)).toBe(true);
+      expect(areOverlapping(b[0], b[1], a[0], a[1], cmp)).toBe(true);
+    });
+  });
+
+  const disjointCases: { name: string, a: [number, number], b: [number, number] }[] = [
+    { name: 'A entirely before B', a: [0, 2], b: [3, 5] },
+    { name: 'A entirely after B', a: [8, 9], b: [3, 5] },
+  ];
+
+  disjointCases.forEach(({ name, a, b }) => {
+    test(name, () => {
+      expect(areOverlapping(a[0], a[1], b[0], b[1], cmp)).toBe(false);
+      expect(areOverlapping(b[0], b[1], a[0], a[1], cmp)).toBe(false);
+    });
+  });
+});
 
 describe('height calculation', () =>
 {

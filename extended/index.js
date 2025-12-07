@@ -32,7 +32,6 @@ var BTreeEx = /** @class */ (function (_super) {
         var result = new BTreeEx(undefined, this._compare, this._maxNodeSize);
         var target = result;
         target._root = source._root;
-        target._size = source._size;
         return result;
     };
     BTreeEx.prototype.greedyClone = function (force) {
@@ -40,7 +39,6 @@ var BTreeEx = /** @class */ (function (_super) {
         var result = new BTreeEx(undefined, this._compare, this._maxNodeSize);
         var target = result;
         target._root = source._root.greedyClone(force);
-        target._size = source._size;
         return result;
     };
     BTreeEx.prototype.diffAgainst = function (other, onlyThis, onlyOther, different) {

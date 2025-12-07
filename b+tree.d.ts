@@ -105,7 +105,6 @@ export declare function simpleComparator(a: (number | string)[], b: (number | st
  */
 export default class BTree<K = any, V = any> implements ISortedMapF<K, V>, ISortedMap<K, V> {
     private _root;
-    _size: number;
     _maxNodeSize: number;
     /**
      * provides a total order over keys (and a strict partial order over the type K)
@@ -416,9 +415,9 @@ export default class BTree<K = any, V = any> implements ISortedMapF<K, V>, ISort
     /** Scans the tree for signs of serious bugs (e.g. this.size doesn't match
      *  number of elements, internal nodes not caching max element properly...)
      *  Computational complexity: O(number of nodes), i.e. O(size). This method
-     *  skips the most expensive test - whether all keys are sorted - but it
-     *  does check that maxKey() of the children of internal nodes are sorted. */
-    checkValid(): void;
+     *  validates cached size information and, optionally, the ordering of
+     *  keys (including leaves). */
+    checkValid(checkOrdering?: boolean): void;
 }
 /** A TypeScript helper function that simply returns its argument, typed as
  *  `ISortedSet<K>` if the BTree implements it, as it does if `V extends undefined`.
