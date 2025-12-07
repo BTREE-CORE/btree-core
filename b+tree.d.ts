@@ -416,7 +416,7 @@ export default class BTree<K = any, V = any> implements ISortedMapF<K, V>, ISort
      *  number of elements, internal nodes not caching max element properly...)
      *  Computational complexity: O(number of nodes), i.e. O(size). This method
      *  validates cached size information and, optionally, the ordering of
-     *  keys (including leaves). */
+     *  keys (including leaves), which takes more time to check. */
     checkValid(checkOrdering?: boolean): void;
 }
 /** A TypeScript helper function that simply returns its argument, typed as

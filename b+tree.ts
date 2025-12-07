@@ -921,7 +921,7 @@ export default class BTree<K=any, V=any> implements ISortedMapF<K,V>, ISortedMap
    *  number of elements, internal nodes not caching max element properly...)
    *  Computational complexity: O(number of nodes), i.e. O(size). This method
    *  validates cached size information and, optionally, the ordering of
-   *  keys (including leaves). */
+   *  keys (including leaves), which takes more time to check. */
   checkValid(checkOrdering = false) {
     var [size] = this._root.checkValid(0, this, 0, checkOrdering);
     check(size === this.size, "size mismatch: counted ", size, "but stored", this.size);
@@ -1659,25 +1659,8 @@ export function sumChildSizes<K,V>(children: BNode<K,V>[]): number {
  * @internal
  */
 export function areOverlapping<K,V>(
-  aMin: K,
-  aMax: K,
-  bMin: K,
-  bMax: K,
-  cmp: (x:K,y:K)=>number
+  aMin: K, aMax: K, bMin: K, bMax: K, cmp: (x:K,y:K)=>number
 ): boolean {
-  // There are 4 possibilities:
-  // 1. aMin.........aMax
-  //            bMin.........bMax
-  // (aMax between bMin and bMax)
-  // 2.            aMin.........aMax
-  //      bMin.........bMax
-  // (aMin between bMin and bMax)
-  // 3. aMin.............aMax
-  //         bMin....bMax
-  // (aMin and aMax enclose bMin and bMax; note this includes equality cases)
-  // 4.      aMin....aMax
-  //     bMin.............bMax
-  // (bMin and bMax enclose aMin and aMax; note equality cases are identical to case 3)
   return cmp(aMin, bMax) <= 0 && cmp(aMax, bMin) >= 0;
 }
 

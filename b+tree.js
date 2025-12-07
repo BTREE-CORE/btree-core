@@ -825,7 +825,7 @@ var BTree = /** @class */ (function () {
      *  number of elements, internal nodes not caching max element properly...)
      *  Computational complexity: O(number of nodes), i.e. O(size). This method
      *  validates cached size information and, optionally, the ordering of
-     *  keys (including leaves). */
+     *  keys (including leaves), which takes more time to check. */
     BTree.prototype.checkValid = function (checkOrdering) {
         if (checkOrdering === void 0) { checkOrdering = false; }
         var size = this._root.checkValid(0, this, 0, checkOrdering)[0];
@@ -1511,19 +1511,6 @@ exports.sumChildSizes = sumChildSizes;
  * @internal
  */
 function areOverlapping(aMin, aMax, bMin, bMax, cmp) {
-    // There are 4 possibilities:
-    // 1. aMin.........aMax
-    //            bMin.........bMax
-    // (aMax between bMin and bMax)
-    // 2.            aMin.........aMax
-    //      bMin.........bMax
-    // (aMin between bMin and bMax)
-    // 3. aMin.............aMax
-    //         bMin....bMax
-    // (aMin and aMax enclose bMin and bMax; note this includes equality cases)
-    // 4.      aMin....aMax
-    //     bMin.............bMax
-    // (bMin and bMax enclose aMin and aMax; note equality cases are identical to case 3)
     return cmp(aMin, bMax) <= 0 && cmp(aMax, bMin) >= 0;
 }
 exports.areOverlapping = areOverlapping;

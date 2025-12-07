@@ -73,7 +73,10 @@ const header =
 console.log(header);
 console.log('-'.repeat(header.length));
 
-for (const entry of entryPoints) {
+const btreeExTransitive = { raw: 0, min: 0, gz: 0 };
+const btreeExTransitiveHasValue = { raw: false, min: false, gz: false };
+
+entryPoints.forEach((entry, index) => {
   const raw = fileSize(entry.raw);
   const min = fileSize(entry.min);
   const gz = gzipSize(entry.min);
@@ -82,6 +85,30 @@ for (const entry of entryPoints) {
     pad(formatBytes(raw), 13) +
     pad(formatBytes(min), 13) +
     formatBytes(gz);
+  console.log(line);
+  if (index > 0) {
+    if (typeof raw === 'number') {
+      btreeExTransitive.raw += raw;
+      btreeExTransitiveHasValue.raw = true;
+    }
+    if (typeof min === 'number') {
+      btreeExTransitive.min += min;
+      btreeExTransitiveHasValue.min = true;
+    }
+    if (typeof gz === 'number') {
+      btreeExTransitive.gz += gz;
+      btreeExTransitiveHasValue.gz = true;
+    }
+  }
+});
+
+if (entryPoints.length > 1) {
+  const line =
+    pad('BTreeEx transitive', nameColumnWidth) +
+    pad(btreeExTransitiveHasValue.raw ? formatBytes(btreeExTransitive.raw) : 'n/a', 13) +
+    pad(btreeExTransitiveHasValue.min ? formatBytes(btreeExTransitive.min) : 'n/a', 13) +
+    (btreeExTransitiveHasValue.gz ? formatBytes(btreeExTransitive.gz) : 'n/a');
+  console.log('-'.repeat(header.length));
   console.log(line);
 }
 
