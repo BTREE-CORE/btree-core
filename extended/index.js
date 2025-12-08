@@ -59,22 +59,22 @@ var BTreeEx = /** @class */ (function (_super) {
         return _super !== null && _super.apply(this, arguments) || this;
     }
     /**
-     * Bulk loads a new `BTreeEx` from a sorted alternating list of entries.
+     * Bulk loads a new `BTreeEx` from parallel arrays of sorted entries.
      * This reuses the same algorithm as `extended/bulkLoad`, but produces a `BTreeEx`.
      * Time and space complexity are O(n).
-     * @param entries Alternating array of keys and values: `[key0, value0, key1, value1, ...]`. Must be sorted by key in strictly ascending order.
+     * @param keys Keys to load, sorted by key in strictly ascending order.
+     * @param values Values aligned with the supplied keys.
      * @param maxNodeSize The branching factor (maximum number of children per node).
      * @param compare Comparator to use. Defaults to the standard comparator if omitted.
      * @returns A fully built tree containing the supplied entries.
      * @throws Error if the entries are not strictly sorted or contain duplicate keys.
      */
-    BTreeEx.bulkLoad = function (entries, maxNodeSize, compare) {
+    BTreeEx.bulkLoad = function (keys, values, maxNodeSize, compare) {
         var cmp = compare !== null && compare !== void 0 ? compare : b_tree_1.defaultComparator;
-        var root = (0, bulkLoad_1.bulkLoadRoot)(entries, maxNodeSize, cmp);
+        var root = (0, bulkLoad_1.bulkLoadRoot)(keys, values, maxNodeSize, cmp);
         var tree = new BTreeEx(undefined, cmp, maxNodeSize);
         var target = tree;
         target._root = root;
-        //target._size = root.size();
         return tree;
     };
     /** See {@link BTree.clone}. */

@@ -28,15 +28,17 @@ function intersect(treeA, treeB, combineFn) {
         return treeA.clone();
     if (_treeB._root.size() === 0)
         return treeB.clone();
-    var intersected = (0, shared_1.createAlternatingList)();
+    var intersectedKeys = [];
+    var intersectedValues = [];
     (0, forEachKeyInBoth_1.default)(treeA, treeB, function (key, leftValue, rightValue) {
         var mergedValue = combineFn(key, leftValue, rightValue);
-        (0, shared_1.alternatingPush)(intersected, key, mergedValue);
+        intersectedKeys.push(key);
+        intersectedValues.push(mergedValue);
     });
     // Intersected keys are guaranteed to be in order, so we can bulk load
     var constructor = treeA.constructor;
     var resultTree = new constructor(undefined, treeA._compare, branchingFactor);
-    resultTree._root = (0, bulkLoad_1.bulkLoadRoot)(intersected, branchingFactor, treeA._compare);
+    resultTree._root = (0, bulkLoad_1.bulkLoadRoot)(intersectedKeys, intersectedValues, branchingFactor, treeA._compare);
     return resultTree;
 }
 exports.default = intersect;

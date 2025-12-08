@@ -1,12 +1,12 @@
 import BTree, { BNode, BNodeInternal, check, sumChildSizes } from '../b+tree';
-import { alternatingCount, alternatingGetFirst, makeLeavesFrom, type AlternatingList, type BTreeWithInternals } from './shared';
+import { makeLeavesFrom, type BTreeWithInternals } from './shared';
 
 /**
  * Loads a B-Tree from a sorted list of entries in bulk. This is faster than inserting
  * entries one at a time, and produces a more optimally balanced tree.
  * Time and space complexity: O(n).
- * @param entries The list of key/value pairs to load. Must be sorted by key in strictly ascending order. Note that
- * the array is an alternating list of keys and values: [key0, value0, key1, value1, ...].
+ * @param keys Keys to load, sorted in strictly ascending order.
+ * @param values Values corresponding to each key.
  * @param maxNodeSize The branching factor (maximum node size) for the resulting tree.
  * @param compare Function to compare keys.
  * @param loadFactor Desired load factor for created leaves. Must be between 0.5 and 1.0.
@@ -14,13 +14,13 @@ import { alternatingCount, alternatingGetFirst, makeLeavesFrom, type Alternating
  * @throws Error if the entries are not sorted by key in strictly ascending order (duplicates disallowed) or if the load factor is out of the allowed range.
  */
 export function bulkLoad<K, V>(
-  entries: (K | V)[],
+  keys: K[],
+  values: V[],
   maxNodeSize: number,
   compare: (a: K, b: K) => number,
   loadFactor = 0.8
 ): BTree<K, V> {
-  const alternatingEntries = entries as AlternatingList<K, V>;
-  const root = bulkLoadRoot<K, V>(alternatingEntries, maxNodeSize, compare, loadFactor);
+  const root = bulkLoadRoot<K, V>(keys, values, maxNodeSize, compare, loadFactor);
   const tree = new BTree<K, V>(undefined, compare, maxNodeSize);
   const target = tree as unknown as BTreeWithInternals<K, V>;
   target._root = root;
@@ -33,7 +33,8 @@ export function bulkLoad<K, V>(
  * @internal
  */
 export function bulkLoadRoot<K, V>(
-  entries: AlternatingList<K, V>,
+  keys: K[],
+  values: V[],
   maxNodeSize: number,
   compare: (a: K, b: K) => number,
   loadFactor = 0.8
@@ -41,11 +42,14 @@ export function bulkLoadRoot<K, V>(
   if (loadFactor < 0.5 || loadFactor > 1.0)
     throw new Error("bulkLoad: loadFactor must be between 0.5 and 1.0");
 
-  const totalPairs = alternatingCount(entries);
+  if (keys.length !== values.length)
+    throw new Error("bulkLoad: keys and values arrays must be the same length");
+
+  const totalPairs = keys.length;
   if (totalPairs > 1) {
-    let previousKey = alternatingGetFirst(entries, 0);
+    let previousKey = keys[0];
     for (let i = 1; i < totalPairs; i++) {
-      const key = alternatingGetFirst(entries, i);
+      const key = keys[i];
       if (compare(previousKey, key) >= 0)
         throw new Error("bulkLoad: entries must be sorted by key in strictly ascending order");
       previousKey = key;
@@ -53,7 +57,7 @@ export function bulkLoadRoot<K, V>(
   }
 
   const leaves: BNode<K, V>[] = [];
-  makeLeavesFrom(entries, maxNodeSize, (leaf) => leaves.push(leaf), loadFactor);
+  makeLeavesFrom(keys, values, maxNodeSize, (leaf) => leaves.push(leaf), loadFactor);
   if (leaves.length === 0)
     return new BNode<K, V>();
 

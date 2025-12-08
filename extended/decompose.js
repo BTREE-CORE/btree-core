@@ -22,8 +22,9 @@ function decompose(left, right, combineFn, ignoreRight) {
     var cmp = left._compare;
     (0, b_tree_1.check)(left._root.size() > 0 && right._root.size() > 0, "decompose requires non-empty inputs");
     // Holds the disjoint nodes that result from decomposition.
-    // Alternating entries of (height, node) to avoid creating small tuples
-    var disjoint = (0, shared_1.createAlternatingList)();
+    // Stored as parallel arrays of (height, node) to avoid creating many tiny tuples
+    var disjointHeights = [];
+    var disjointNodes = [];
     // During the decomposition, leaves that are not disjoint are decomposed into individual entries
     // that accumulate in this array in sorted order. They are flushed into leaf nodes whenever a reused
     // disjoint subtree is added to the disjoint set.
@@ -31,7 +32,8 @@ function decompose(left, right, combineFn, ignoreRight) {
     // An example of this would be a leaf in one tree that contained keys [0, 100, 101, 102].
     // In the other tree, there is a leaf that contains [2, 3, 4, 5]. This leaf can be reused entirely,
     // but the first tree's leaf must be decomposed into [0] and [100, 101, 102]
-    var pending = (0, shared_1.createAlternatingList)();
+    var pendingKeys = [];
+    var pendingValues = [];
     var tallestIndex = -1, tallestHeight = -1;
     // During the upward part of the cursor walk, this holds the highest disjoint node seen so far.
     // This is done because we cannot know immediately whether we can add the node to the disjoint set
@@ -40,22 +42,26 @@ function decompose(left, right, combineFn, ignoreRight) {
     var minSize = Math.floor(maxNodeSize / 2);
     var onLeafCreation = function (leaf) {
         var height = leaf.keys.length < minSize ? -1 : 0;
-        (0, shared_1.alternatingPush)(disjoint, height, leaf);
+        disjointHeights.push(height);
+        disjointNodes.push(leaf);
     };
     var addSharedNodeToDisjointSet = function (node, height) {
         // flush pending entries
-        (0, shared_1.makeLeavesFrom)(pending, maxNodeSize, onLeafCreation, decomposeLoadFactor);
-        pending.length = 0;
+        (0, shared_1.makeLeavesFrom)(pendingKeys, pendingValues, maxNodeSize, onLeafCreation, decomposeLoadFactor);
+        pendingKeys.length = 0;
+        pendingValues.length = 0;
         // Don't share underfilled leaves, instead mark them as needing merging
         if (node.isLeaf && node.keys.length < minSize) {
-            (0, shared_1.alternatingPush)(disjoint, -1, node.clone());
+            disjointHeights.push(-1);
+            disjointNodes.push(node.clone());
         }
         else {
             node.isShared = true;
-            (0, shared_1.alternatingPush)(disjoint, height, node);
+            disjointHeights.push(height);
+            disjointNodes.push(node);
         }
         if (height > tallestHeight) {
-            tallestIndex = (0, shared_1.alternatingCount)(disjoint) - 1;
+            tallestIndex = disjointHeights.length - 1;
             tallestHeight = height;
         }
     };
@@ -83,8 +89,10 @@ function decompose(left, right, combineFn, ignoreRight) {
     var pushLeafRange = function (leaf, from, toExclusive) {
         var keys = leaf.keys;
         var values = leaf.values;
-        for (var i = from; i < toExclusive; ++i)
-            (0, shared_1.alternatingPush)(pending, keys[i], values[i]);
+        for (var i = from; i < toExclusive; ++i) {
+            pendingKeys.push(keys[i]);
+            pendingValues.push(values[i]);
+        }
     };
     var onMoveInLeaf = function (leaf, payload, fromIndex, toIndex, startedEqual) {
         (0, b_tree_1.check)(payload.disqualified === true, "onMoveInLeaf: leaf must be disqualified");
@@ -249,8 +257,10 @@ function decompose(left, right, combineFn, ignoreRight) {
             // Perform the actual merge of values here. The cursors will avoid adding a duplicate of this key/value
             // to pending because they respect the areEqual flag during their moves.
             var combined = combineFn(key, vA, vB);
-            if (combined !== undefined)
-                (0, shared_1.alternatingPush)(pending, key, combined);
+            if (combined !== undefined) {
+                pendingKeys.push(key);
+                pendingValues.push(combined);
+            }
             var outTrailing = (0, parallelWalk_1.moveForwardOne)(trailing, leading);
             var outLeading = (0, parallelWalk_1.moveForwardOne)(leading, trailing);
             if (outTrailing || outLeading) {
@@ -289,12 +299,12 @@ function decompose(left, right, combineFn, ignoreRight) {
         }
     }
     // Ensure any trailing non-disjoint entries are added
-    (0, shared_1.makeLeavesFrom)(pending, maxNodeSize, onLeafCreation, decomposeLoadFactor);
+    (0, shared_1.makeLeavesFrom)(pendingKeys, pendingValues, maxNodeSize, onLeafCreation, decomposeLoadFactor);
     // In cases like full interleaving, no leaves may be created until now
-    if (tallestHeight < 0 && (0, shared_1.alternatingCount)(disjoint) > 0) {
+    if (tallestHeight < 0 && disjointHeights.length > 0) {
         tallestIndex = 0;
     }
-    return { disjoint: disjoint, tallestIndex: tallestIndex };
+    return { heights: disjointHeights, nodes: disjointNodes, tallestIndex: tallestIndex };
 }
 exports.decompose = decompose;
 /**
@@ -302,8 +312,9 @@ exports.decompose = decompose;
  * @internal
  */
 function buildFromDecomposition(constructor, branchingFactor, decomposed, cmp, maxNodeSize) {
-    var disjoint = decomposed.disjoint, tallestIndex = decomposed.tallestIndex;
-    var disjointEntryCount = (0, shared_1.alternatingCount)(disjoint);
+    var heights = decomposed.heights, nodes = decomposed.nodes, tallestIndex = decomposed.tallestIndex;
+    (0, b_tree_1.check)(heights.length === nodes.length, "Decompose result has mismatched heights and nodes.");
+    var disjointEntryCount = heights.length;
     // Now we have a set of disjoint subtrees and we need to merge them into a single tree.
     // To do this, we start with the tallest subtree from the disjoint set and, for all subtrees
     // to the "right" and "left" of it in sorted order, we append them onto the appropriate side
@@ -312,7 +323,7 @@ function buildFromDecomposition(constructor, branchingFactor, decomposed, cmp, m
     // the leaf level on that side of the tree. Each appended subtree is appended to the node at the
     // same height as itself on the frontier. Each tree is guaranteed to be at most as tall as the
     // current frontier because we start from the tallest subtree and work outward.
-    var initialRoot = (0, shared_1.alternatingGetSecond)(disjoint, tallestIndex);
+    var initialRoot = nodes[tallestIndex];
     var frontier = [initialRoot];
     var rightContext = {
         branchingFactor: branchingFactor,
@@ -327,7 +338,7 @@ function buildFromDecomposition(constructor, branchingFactor, decomposed, cmp, m
     // Process all subtrees to the right of the tallest subtree
     if (tallestIndex + 1 <= disjointEntryCount - 1) {
         updateFrontier(rightContext, 0);
-        processSide(disjoint, tallestIndex + 1, disjointEntryCount, 1, rightContext);
+        processSide(heights, nodes, tallestIndex + 1, disjointEntryCount, 1, rightContext);
     }
     var leftContext = {
         branchingFactor: branchingFactor,
@@ -343,7 +354,7 @@ function buildFromDecomposition(constructor, branchingFactor, decomposed, cmp, m
     if (tallestIndex - 1 >= 0) {
         // Note we need to update the frontier here because the right-side processing may have grown the tree taller.
         updateFrontier(leftContext, 0);
-        processSide(disjoint, tallestIndex - 1, -1, -1, leftContext);
+        processSide(heights, nodes, tallestIndex - 1, -1, -1, leftContext);
     }
     var reconstructed = new constructor(undefined, cmp, maxNodeSize);
     reconstructed._root = frontier[0];
@@ -356,7 +367,7 @@ exports.buildFromDecomposition = buildFromDecomposition;
  * Merges each subtree in the disjoint set from start to end (exclusive) into the given spine.
  * @internal
  */
-function processSide(disjoint, start, end, step, context) {
+function processSide(heights, nodes, start, end, step, context) {
     var spine = context.spine, sideIndex = context.sideIndex;
     // Determine the depth of the first shared node on the frontier.
     // Appending subtrees to the frontier must respect the copy-on-write semantics by cloning
@@ -378,8 +389,8 @@ function processSide(disjoint, start, end, step, context) {
     var unflushedSizes = new Array(spine.length).fill(0); // pre-fill to avoid "holey" array
     for (var i = start; i != end; i += step) {
         var currentHeight = spine.length - 1; // height is number of internal levels; 0 means leaf
-        var subtree = (0, shared_1.alternatingGetSecond)(disjoint, i);
-        var subtreeHeight = (0, shared_1.alternatingGetFirst)(disjoint, i);
+        var subtree = nodes[i];
+        var subtreeHeight = heights[i];
         var isEntryInsertion = subtreeHeight === -1;
         (0, b_tree_1.check)(subtreeHeight <= currentHeight, "Subtree taller than spine during reconstruction.");
         // If subtree height is -1 (indicating underfilled leaf), then this indicates insertion into a leaf

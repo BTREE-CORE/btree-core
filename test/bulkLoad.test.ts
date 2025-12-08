@@ -22,22 +22,26 @@ function pairsFromKeys(keys: number[]): Pair[] {
   return keys.map((key, index) => [key, index - key]);
 }
 
-function toAlternating(pairs: Pair[]): number[] {
-  const alternating: number[] = [];
-  for (const [key, value] of pairs)
-    alternating.push(key, value);
-  return alternating;
+function toParallelArrays(pairs: Pair[]): { keys: number[]; values: number[] } {
+  const keys = new Array<number>(pairs.length);
+  const values = new Array<number>(pairs.length);
+  for (let i = 0; i < pairs.length; i++) {
+    const [key, value] = pairs[i];
+    keys[i] = key;
+    values[i] = value;
+  }
+  return { keys, values };
 }
 
 function buildTreeFromPairs(maxNodeSize: number, pairs: Pair[], loadFactor: number) {
-  const alternating = toAlternating(pairs);
-  const tree = bulkLoad<number, number>(alternating, maxNodeSize, compareNumbers, loadFactor);
+  const { keys, values } = toParallelArrays(pairs);
+  const tree = bulkLoad<number, number>(keys, values, maxNodeSize, compareNumbers, loadFactor);
   const root = tree['_root'] as BNode<number, number>;
   return { tree, root };
 }
 
 function expectTreeMatches(tree: BTree<number, number>, expected: Pair[]) {
-  tree.checkValid();
+  tree.checkValid(true);
   expect(tree.size).toBe(expected.length);
   expect(tree.toArray()).toEqual(expected);
 }
@@ -68,8 +72,9 @@ function assertInternalNodeFanout(node: BNode<number, number>, maxNodeSize: numb
 
 describe.each(branchingFactors)('bulkLoad fanout %i', (maxNodeSize) => {
   test('throws when keys are not strictly ascending', () => {
-    const alternating = [3, 30, 2, 20];
-    expect(() => bulkLoad<number, number>(alternating.slice(), maxNodeSize, compareNumbers))
+    const keys = [3, 2];
+    const values = [30, 20];
+    expect(() => bulkLoad<number, number>(keys.slice(), values.slice(), maxNodeSize, compareNumbers))
       .toThrow('bulkLoad: entries must be sorted by key in strictly ascending order');
   });
 
@@ -111,15 +116,20 @@ describe.each(branchingFactors)('bulkLoad fanout %i', (maxNodeSize) => {
 
   test('does not mutate the supplied entry list', () => {
     const pairs = sequentialPairs(maxNodeSize, 0, 2);
-    buildTreeFromPairs(maxNodeSize, pairs, 0.6);
-    expect(pairs.length).toBe(maxNodeSize);
+    const { keys, values } = toParallelArrays(pairs);
+    const originalKeys = keys.slice();
+    const originalValues = values.slice();
+    const tree = bulkLoad<number, number>(keys, values, maxNodeSize, compareNumbers, 0.6);
+    expect(keys).toEqual(originalKeys);
+    expect(values).toEqual(originalValues);
+    expectTreeMatches(tree, pairs);
   });
 
   test('throws when load factor is too low or too high', () => {
       const pairs = sequentialPairs(maxNodeSize, 0, 2);
-      const alternating = toAlternating(pairs);
-      expect(() => bulkLoad<number, number>(alternating, maxNodeSize, compareNumbers, 0.3)).toThrow();
-      expect(() => bulkLoad<number, number>(alternating, maxNodeSize, compareNumbers, 1.1)).toThrow();
+      const { keys, values } = toParallelArrays(pairs);
+      expect(() => bulkLoad<number, number>(keys.slice(), values.slice(), maxNodeSize, compareNumbers, 0.3)).toThrow();
+      expect(() => bulkLoad<number, number>(keys.slice(), values.slice(), maxNodeSize, compareNumbers, 1.1)).toThrow();
   });
 
   test('distributes keys nearly evenly across leaves when not divisible by fanout', () => {
@@ -167,8 +177,8 @@ describe.each(branchingFactors)('bulkLoad fanout %i', (maxNodeSize) => {
 describe('BTreeEx.bulkLoad', () => {
   test.each(branchingFactors)('creates tree for fanout %i', (maxNodeSize) => {
     const pairs = sequentialPairs(maxNodeSize * 2 + 3, 7, 1);
-    const alternating = toAlternating(pairs);
-    const tree = BTreeEx.bulkLoad<number, number>(alternating, maxNodeSize, compareNumbers);
+    const { keys, values } = toParallelArrays(pairs);
+    const tree = BTreeEx.bulkLoad<number, number>(keys, values, maxNodeSize, compareNumbers);
     expect(tree).toBeInstanceOf(BTreeEx);
     expectTreeMatches(tree, pairs);
   });

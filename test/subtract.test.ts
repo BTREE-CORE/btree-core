@@ -27,7 +27,7 @@ const runForEachKeyNotInAndSubtract = (
   const resultTree = subtract<BTreeEx<number, number>, number, number>(include, exclude);
   const subtractCalls = resultTree.toArray().map(([key, value]) => ({ key, value }));
   expect(subtractCalls).toEqual(forEachCalls);
-  resultTree.checkValid();
+  resultTree.checkValid(true);
   assertion(subtractCalls);
 };
 
@@ -278,8 +278,8 @@ describe('BTree forEachKeyNotIn/subtract fuzz tests', () => {
 
       expectTreeMatchesEntries(treeA, treeAEntries);
       expectTreeMatchesEntries(treeB, treeBEntries);
-      treeA.checkValid();
-      treeB.checkValid();
+      treeA.checkValid(true);
+      treeB.checkValid(true);
     });
   });
 });

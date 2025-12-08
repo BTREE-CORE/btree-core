@@ -8,16 +8,17 @@ import BTree from '../b+tree';
  */
 export declare class BTreeEx<K = any, V = any> extends BTree<K, V> {
     /**
-     * Bulk loads a new `BTreeEx` from a sorted alternating list of entries.
+     * Bulk loads a new `BTreeEx` from parallel arrays of sorted entries.
      * This reuses the same algorithm as `extended/bulkLoad`, but produces a `BTreeEx`.
      * Time and space complexity are O(n).
-     * @param entries Alternating array of keys and values: `[key0, value0, key1, value1, ...]`. Must be sorted by key in strictly ascending order.
+     * @param keys Keys to load, sorted by key in strictly ascending order.
+     * @param values Values aligned with the supplied keys.
      * @param maxNodeSize The branching factor (maximum number of children per node).
      * @param compare Comparator to use. Defaults to the standard comparator if omitted.
      * @returns A fully built tree containing the supplied entries.
      * @throws Error if the entries are not strictly sorted or contain duplicate keys.
      */
-    static bulkLoad<K, V>(entries: (K | V)[], maxNodeSize: number, compare?: (a: K, b: K) => number): BTreeEx<K, V>;
+    static bulkLoad<K, V>(keys: K[], values: V[], maxNodeSize: number, compare?: (a: K, b: K) => number): BTreeEx<K, V>;
     /** See {@link BTree.clone}. */
     clone(): this;
     /** See {@link BTree.greedyClone}. */

@@ -26,18 +26,17 @@ var shared_1 = require("./shared");
  * Loads a B-Tree from a sorted list of entries in bulk. This is faster than inserting
  * entries one at a time, and produces a more optimally balanced tree.
  * Time and space complexity: O(n).
- * @param entries The list of key/value pairs to load. Must be sorted by key in strictly ascending order. Note that
- * the array is an alternating list of keys and values: [key0, value0, key1, value1, ...].
+ * @param keys Keys to load, sorted in strictly ascending order.
+ * @param values Values corresponding to each key.
  * @param maxNodeSize The branching factor (maximum node size) for the resulting tree.
  * @param compare Function to compare keys.
  * @param loadFactor Desired load factor for created leaves. Must be between 0.5 and 1.0.
  * @returns A new BTree containing the given entries.
  * @throws Error if the entries are not sorted by key in strictly ascending order (duplicates disallowed) or if the load factor is out of the allowed range.
  */
-function bulkLoad(entries, maxNodeSize, compare, loadFactor) {
+function bulkLoad(keys, values, maxNodeSize, compare, loadFactor) {
     if (loadFactor === void 0) { loadFactor = 0.8; }
-    var alternatingEntries = entries;
-    var root = bulkLoadRoot(alternatingEntries, maxNodeSize, compare, loadFactor);
+    var root = bulkLoadRoot(keys, values, maxNodeSize, compare, loadFactor);
     var tree = new b_tree_1.default(undefined, compare, maxNodeSize);
     var target = tree;
     target._root = root;
@@ -49,22 +48,24 @@ exports.bulkLoad = bulkLoad;
  * Bulk loads, returns the root node of the resulting tree.
  * @internal
  */
-function bulkLoadRoot(entries, maxNodeSize, compare, loadFactor) {
+function bulkLoadRoot(keys, values, maxNodeSize, compare, loadFactor) {
     if (loadFactor === void 0) { loadFactor = 0.8; }
     if (loadFactor < 0.5 || loadFactor > 1.0)
         throw new Error("bulkLoad: loadFactor must be between 0.5 and 1.0");
-    var totalPairs = (0, shared_1.alternatingCount)(entries);
+    if (keys.length !== values.length)
+        throw new Error("bulkLoad: keys and values arrays must be the same length");
+    var totalPairs = keys.length;
     if (totalPairs > 1) {
-        var previousKey = (0, shared_1.alternatingGetFirst)(entries, 0);
+        var previousKey = keys[0];
         for (var i = 1; i < totalPairs; i++) {
-            var key = (0, shared_1.alternatingGetFirst)(entries, i);
+            var key = keys[i];
             if (compare(previousKey, key) >= 0)
                 throw new Error("bulkLoad: entries must be sorted by key in strictly ascending order");
             previousKey = key;
         }
     }
     var leaves = [];
-    (0, shared_1.makeLeavesFrom)(entries, maxNodeSize, function (leaf) { return leaves.push(leaf); }, loadFactor);
+    (0, shared_1.makeLeavesFrom)(keys, values, maxNodeSize, function (leaf) { return leaves.push(leaf); }, loadFactor);
     if (leaves.length === 0)
         return new b_tree_1.BNode();
     var targetNodeSize = Math.ceil(maxNodeSize * loadFactor);

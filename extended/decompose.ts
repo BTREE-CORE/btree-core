@@ -1,5 +1,5 @@
 import BTree, { areOverlapping, BNode, BNodeInternal, check } from '../b+tree';
-import { alternatingCount, alternatingGetFirst, alternatingGetSecond, alternatingPush, BTreeConstructor, createAlternatingList, makeLeavesFrom, type AlternatingList, type BTreeWithInternals } from './shared';
+import { BTreeConstructor, makeLeavesFrom, type BTreeWithInternals } from './shared';
 import { createCursor, getKey, Cursor, moveForwardOne, moveTo, noop } from "./parallelWalk";
 
 /**
@@ -8,7 +8,7 @@ import { createCursor, getKey, Cursor, moveForwardOne, moveTo, noop } from "./pa
  * Any shared nodes (including underfilled leaves) must have height >= 0.
  * @internal
  */
-export type DecomposeResult<K, V> = { disjoint: AlternatingList<number, BNode<K, V>>, tallestIndex: number };
+export type DecomposeResult<K, V> = { heights: number[], nodes: BNode<K, V>[], tallestIndex: number };
 
 /**
  * Payload type used by decomposition cursors.
@@ -38,8 +38,9 @@ export function decompose<K, V>(
   const cmp = left._compare;
   check(left._root.size() > 0 && right._root.size() > 0, "decompose requires non-empty inputs");
   // Holds the disjoint nodes that result from decomposition.
-  // Alternating entries of (height, node) to avoid creating small tuples
-  const disjoint = createAlternatingList<number, BNode<K, V>>();
+  // Stored as parallel arrays of (height, node) to avoid creating many tiny tuples
+  const disjointHeights: number[] = [];
+  const disjointNodes: BNode<K, V>[] = [];
   // During the decomposition, leaves that are not disjoint are decomposed into individual entries
   // that accumulate in this array in sorted order. They are flushed into leaf nodes whenever a reused
   // disjoint subtree is added to the disjoint set.
@@ -47,7 +48,8 @@ export function decompose<K, V>(
   // An example of this would be a leaf in one tree that contained keys [0, 100, 101, 102].
   // In the other tree, there is a leaf that contains [2, 3, 4, 5]. This leaf can be reused entirely,
   // but the first tree's leaf must be decomposed into [0] and [100, 101, 102]
-  const pending = createAlternatingList<K, V>();
+  const pendingKeys: K[] = [];
+  const pendingValues: V[] = [];
   let tallestIndex = -1, tallestHeight = -1;
 
   // During the upward part of the cursor walk, this holds the highest disjoint node seen so far.
@@ -58,26 +60,31 @@ export function decompose<K, V>(
     = undefined as { node: BNode<K, V>, height: number } | undefined;
 
   const minSize = Math.floor(maxNodeSize / 2);
+
   const onLeafCreation = (leaf: BNode<K, V>) => {
-    let height = leaf.keys.length < minSize ? -1 : 0;
-    alternatingPush(disjoint, height, leaf);
-  }
+    const height = leaf.keys.length < minSize ? -1 : 0;
+    disjointHeights.push(height);
+    disjointNodes.push(leaf);
+  };
 
   const addSharedNodeToDisjointSet = (node: BNode<K, V>, height: number) => {
     // flush pending entries
-    makeLeavesFrom(pending, maxNodeSize, onLeafCreation, decomposeLoadFactor);
-    pending.length = 0;
+    makeLeavesFrom(pendingKeys, pendingValues, maxNodeSize, onLeafCreation, decomposeLoadFactor);
+    pendingKeys.length = 0;
+    pendingValues.length = 0;
 
     // Don't share underfilled leaves, instead mark them as needing merging
     if (node.isLeaf && node.keys.length < minSize) {
-      alternatingPush(disjoint, -1, node.clone());
+      disjointHeights.push(-1);
+      disjointNodes.push(node.clone());
     } else {
       node.isShared = true;
-      alternatingPush(disjoint, height, node);
+      disjointHeights.push(height);
+      disjointNodes.push(node);
     }
 
     if (height > tallestHeight) {
-      tallestIndex = alternatingCount(disjoint) - 1;
+      tallestIndex = disjointHeights.length - 1;
       tallestHeight = height;
     }
   };
@@ -109,8 +116,10 @@ export function decompose<K, V>(
   const pushLeafRange = (leaf: BNode<K, V>, from: number, toExclusive: number) => {
     const keys = leaf.keys;
     const values = leaf.values;
-    for (let i = from; i < toExclusive; ++i)
-      alternatingPush(pending, keys[i], values[i]);
+    for (let i = from; i < toExclusive; ++i) {
+      pendingKeys.push(keys[i]);
+      pendingValues.push(values[i]);
+    }
   };
 
   const onMoveInLeaf = (
@@ -334,8 +343,10 @@ export function decompose<K, V>(
       // Perform the actual merge of values here. The cursors will avoid adding a duplicate of this key/value
       // to pending because they respect the areEqual flag during their moves.
       const combined = combineFn(key, vA, vB);
-      if (combined !== undefined)
-        alternatingPush(pending, key, combined);
+      if (combined !== undefined) {
+        pendingKeys.push(key);
+        pendingValues.push(combined);
+      }
       const outTrailing = moveForwardOne(trailing, leading);
       const outLeading = moveForwardOne(leading, trailing);
       if (outTrailing || outLeading) {
@@ -371,12 +382,12 @@ export function decompose<K, V>(
   }
 
   // Ensure any trailing non-disjoint entries are added
-  makeLeavesFrom(pending, maxNodeSize, onLeafCreation, decomposeLoadFactor);
+  makeLeavesFrom(pendingKeys, pendingValues, maxNodeSize, onLeafCreation, decomposeLoadFactor);
   // In cases like full interleaving, no leaves may be created until now
-  if (tallestHeight < 0 && alternatingCount(disjoint) > 0) {
+  if (tallestHeight < 0 && disjointHeights.length > 0) {
     tallestIndex = 0;
   }
-  return { disjoint, tallestIndex };
+  return { heights: disjointHeights, nodes: disjointNodes, tallestIndex };
 }
 
 /**
@@ -390,8 +401,9 @@ export function buildFromDecomposition<TBTree extends BTree<K, V>, K, V>(
   cmp: (a: K, b: K) => number,
   maxNodeSize: number
 ): TBTree {
-  const { disjoint, tallestIndex } = decomposed;
-  const disjointEntryCount = alternatingCount(disjoint);
+  const { heights, nodes, tallestIndex } = decomposed;
+  check(heights.length === nodes.length, "Decompose result has mismatched heights and nodes.");
+  const disjointEntryCount = heights.length;
 
   // Now we have a set of disjoint subtrees and we need to merge them into a single tree.
   // To do this, we start with the tallest subtree from the disjoint set and, for all subtrees
@@ -401,7 +413,7 @@ export function buildFromDecomposition<TBTree extends BTree<K, V>, K, V>(
   // the leaf level on that side of the tree. Each appended subtree is appended to the node at the
   // same height as itself on the frontier. Each tree is guaranteed to be at most as tall as the
   // current frontier because we start from the tallest subtree and work outward.
-  const initialRoot = alternatingGetSecond(disjoint, tallestIndex);
+  const initialRoot = nodes[tallestIndex];
   const frontier: BNode<K, V>[] = [initialRoot];
 
   const rightContext: SideContext<K, V> = {
@@ -418,7 +430,8 @@ export function buildFromDecomposition<TBTree extends BTree<K, V>, K, V>(
   if (tallestIndex + 1 <= disjointEntryCount - 1) {
     updateFrontier(rightContext, 0);
     processSide(
-      disjoint,
+      heights,
+      nodes,
       tallestIndex + 1,
       disjointEntryCount, 1,
       rightContext
@@ -440,7 +453,8 @@ export function buildFromDecomposition<TBTree extends BTree<K, V>, K, V>(
     // Note we need to update the frontier here because the right-side processing may have grown the tree taller.
     updateFrontier(leftContext, 0);
     processSide(
-      disjoint,
+      heights,
+      nodes,
       tallestIndex - 1,
       -1,
       -1,
@@ -461,7 +475,8 @@ export function buildFromDecomposition<TBTree extends BTree<K, V>, K, V>(
  * @internal
  */
 function processSide<K, V>(
-  disjoint: AlternatingList<number, BNode<K, V>>,
+  heights: number[],
+  nodes: BNode<K, V>[],
   start: number,
   end: number,
   step: number,
@@ -490,8 +505,8 @@ function processSide<K, V>(
 
   for (let i = start; i != end; i += step) {
     const currentHeight = spine.length - 1; // height is number of internal levels; 0 means leaf
-    const subtree = alternatingGetSecond(disjoint, i);
-    const subtreeHeight = alternatingGetFirst(disjoint, i);
+    const subtree = nodes[i];
+    const subtreeHeight = heights[i];
     const isEntryInsertion = subtreeHeight === -1;
     check(subtreeHeight <= currentHeight, "Subtree taller than spine during reconstruction.");
     // If subtree height is -1 (indicating underfilled leaf), then this indicates insertion into a leaf

@@ -259,8 +259,8 @@ describe('BTree forEachKeyInBoth/intersect fuzz tests', () => {
 
       expectTreeMatchesEntries(treeA, treeAEntries);
       expectTreeMatchesEntries(treeB, treeBEntries);
-      treeA.checkValid();
-      treeB.checkValid();
+      treeA.checkValid(true);
+      treeB.checkValid(true);
     });
   });
 });

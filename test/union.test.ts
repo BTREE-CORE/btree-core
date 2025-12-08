@@ -723,7 +723,7 @@ describe('BTree union fuzz tests', () => {
       );
 
       const unioned = treeA.union(treeB, unionFn);
-      unioned.checkValid();
+      unioned.checkValid(true);
 
       const combinedKeys = new Set<number>();
       treeAEntries.forEach(([key]) => combinedKeys.add(key));

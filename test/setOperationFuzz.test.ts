@@ -108,15 +108,15 @@ describe('Set operation fuzz tests', () => {
       expect(diffAB.size).toBe(treeA.size - intersection.size);
       expect(treeA.size).toBe(diffAB.size + intersection.size);
 
-      partition.checkValid();
-      unionDrop.checkValid();
-      unionKeep.checkValid();
-      intersection.checkValid();
-      diffAB.checkValid();
-      diffBA.checkValid();
-      treeA.checkValid();
-      treeB.checkValid();
-      treeC.checkValid();
+      partition.checkValid(true);
+      unionDrop.checkValid(true);
+      unionKeep.checkValid(true);
+      intersection.checkValid(true);
+      diffAB.checkValid(true);
+      diffBA.checkValid(true);
+      treeA.checkValid(true);
+      treeB.checkValid(true);
+      treeC.checkValid(true);
 
       expectTreeMatchesEntries(treeA, treeAEntries);
       expectTreeMatchesEntries(treeB, treeBEntries);

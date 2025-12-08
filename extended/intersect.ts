@@ -1,5 +1,5 @@
 import BTree from '../b+tree';
-import { alternatingPush, createAlternatingList, checkCanDoSetOperation, type BTreeWithInternals, BTreeConstructor } from './shared';
+import { checkCanDoSetOperation, type BTreeWithInternals, BTreeConstructor } from './shared';
 import forEachKeyInBoth from './forEachKeyInBoth';
 import { bulkLoadRoot } from './bulkLoad';
 
@@ -30,15 +30,17 @@ export default function intersect<TBTree extends BTree<K, V>, K, V>(
   if (_treeB._root.size() === 0)
     return treeB.clone();
 
-  const intersected = createAlternatingList<K, V>();
+  const intersectedKeys: K[] = [];
+  const intersectedValues: V[] = [];
   forEachKeyInBoth(treeA, treeB, (key, leftValue, rightValue) => {
     const mergedValue = combineFn(key, leftValue, rightValue);
-    alternatingPush(intersected, key, mergedValue);
+    intersectedKeys.push(key);
+    intersectedValues.push(mergedValue);
   });
 
   // Intersected keys are guaranteed to be in order, so we can bulk load
   const constructor = treeA.constructor as BTreeConstructor<TBTree, K, V>;
   const resultTree = new constructor(undefined, treeA._compare, branchingFactor);
-  resultTree._root = bulkLoadRoot(intersected, branchingFactor, treeA._compare);
+  resultTree._root = bulkLoadRoot(intersectedKeys, intersectedValues, branchingFactor, treeA._compare);
   return resultTree as unknown as TBTree;
 }
