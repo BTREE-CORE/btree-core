@@ -15,7 +15,7 @@ var __extends = (this && this.__extends) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.EmptyBTree = exports.check = exports.areOverlapping = exports.sumChildSizes = exports.BNodeInternal = exports.BNode = exports.asSet = exports.simpleComparator = exports.defaultComparator = void 0;
+exports.EmptyBTree = exports.check = exports.areOverlapping = exports.sumChildSizes = exports.BNodeInternal = exports.BNode = exports.asSet = exports.fixMaxSize = exports.simpleComparator = exports.defaultComparator = void 0;
 /**
  * Compares DefaultComparables to form a strict partial ordering.
  *
@@ -80,6 +80,12 @@ function simpleComparator(a, b) {
 }
 exports.simpleComparator = simpleComparator;
 ;
+/** Sanitizes a requested max node size.
+ *  @internal */
+function fixMaxSize(maxNodeSize) {
+    return maxNodeSize >= 4 ? Math.min(maxNodeSize | 0, 256) : 32;
+}
+exports.fixMaxSize = fixMaxSize;
 /**
  * A reasonably fast collection of key-value pairs with a powerful API.
  * Largely compatible with the standard Map. BTree is a B+ tree data structure,
@@ -155,7 +161,7 @@ var BTree = /** @class */ (function () {
      */
     function BTree(entries, compare, maxNodeSize) {
         this._root = EmptyLeaf;
-        this._maxNodeSize = maxNodeSize >= 4 ? Math.min(maxNodeSize, 256) : 32;
+        this._maxNodeSize = fixMaxSize(maxNodeSize);
         this._compare = compare || defaultComparator;
         if (entries)
             this.setPairs(entries);

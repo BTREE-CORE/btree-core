@@ -117,6 +117,12 @@ export function simpleComparator(a: any, b: any): number {
   return a > b ? 1 : a < b ? -1 : 0;
 };
 
+/** Sanitizes a requested max node size. 
+ *  @internal */
+export function fixMaxSize(maxNodeSize?: number) {
+  return maxNodeSize! >= 4 ? Math.min(maxNodeSize! | 0, 256) : 32;
+}
+
 /**
  * A reasonably fast collection of key-value pairs with a powerful API. 
  * Largely compatible with the standard Map. BTree is a B+ tree data structure,
@@ -201,7 +207,7 @@ export default class BTree<K=any, V=any> implements ISortedMapF<K,V>, ISortedMap
    *   Must be in range 4..256. If undefined or <4 then default is used; if >256 then 256.
    */
   public constructor(entries?: [K,V][], compare?: (a: K, b: K) => number, maxNodeSize?: number) {
-    this._maxNodeSize = maxNodeSize! >= 4 ? Math.min(maxNodeSize!, 256) : 32;
+    this._maxNodeSize = fixMaxSize(maxNodeSize);
     this._compare = compare || defaultComparator as any as (a: K, b: K) => number;
     if (entries)
       this.setPairs(entries);

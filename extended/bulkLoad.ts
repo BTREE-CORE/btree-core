@@ -1,5 +1,5 @@
-import BTree, { BNode, BNodeInternal, check, sumChildSizes } from '../b+tree';
-import { makeLeavesFrom, type BTreeWithInternals } from './shared';
+import BTree, { BNode, BNodeInternal, check, fixMaxSize, sumChildSizes } from '../b+tree';
+import { makeLeavesFrom as makeAllLeafNodes, type BTreeWithInternals } from './shared';
 
 /**
  * Loads a B-Tree from a sorted list of entries in bulk. This is faster than inserting
@@ -24,7 +24,6 @@ export function bulkLoad<K, V>(
   const tree = new BTree<K, V>(undefined, compare, maxNodeSize);
   const target = tree as unknown as BTreeWithInternals<K, V>;
   target._root = root;
-  //target._size = root.size();
   return tree;
 }
 
@@ -41,41 +40,42 @@ export function bulkLoadRoot<K, V>(
 ): BNode<K, V> {
   if (loadFactor < 0.5 || loadFactor > 1.0)
     throw new Error("bulkLoad: loadFactor must be between 0.5 and 1.0");
-
   if (keys.length !== values.length)
     throw new Error("bulkLoad: keys and values arrays must be the same length");
+  maxNodeSize = fixMaxSize(maxNodeSize);
 
+  // Verify keys are sorted
   const totalPairs = keys.length;
   if (totalPairs > 1) {
     let previousKey = keys[0];
     for (let i = 1; i < totalPairs; i++) {
       const key = keys[i];
       if (compare(previousKey, key) >= 0)
-        throw new Error("bulkLoad: entries must be sorted by key in strictly ascending order");
+        throw new Error("bulkLoad: keys must be sorted in strictly ascending order");
       previousKey = key;
     }
   }
 
-  const leaves: BNode<K, V>[] = [];
-  makeLeavesFrom(keys, values, maxNodeSize, (leaf) => leaves.push(leaf), loadFactor);
-  if (leaves.length === 0)
+  // Get ALL the leaf nodes with which the tree will be populated
+  let currentNodes: BNode<K, V>[] = [];
+  makeAllLeafNodes(keys, values, maxNodeSize, loadFactor, currentNodes.push.bind(currentNodes));
+  if (currentNodes.length === 0)
     return new BNode<K, V>();
 
   const targetNodeSize = Math.ceil(maxNodeSize * loadFactor);
-  const exactlyHalf = targetNodeSize === maxNodeSize / 2;
+  const isExactlyHalf = targetNodeSize === maxNodeSize / 2;
   const minSize = Math.floor(maxNodeSize / 2);
 
-  let currentLevel: BNode<K, V>[] = leaves;
-  while (currentLevel.length > 1) {
-    const nodeCount = currentLevel.length;
-    if (nodeCount <= maxNodeSize && (nodeCount !== maxNodeSize || !exactlyHalf)) {
-      currentLevel = [new BNodeInternal<K, V>(currentLevel, sumChildSizes(currentLevel))];
+  for (let nextLevel; currentNodes.length > 1; currentNodes = nextLevel) {
+    const nodeCount = currentNodes.length;
+    if (nodeCount <= maxNodeSize && (nodeCount !== maxNodeSize || !isExactlyHalf)) {
+      currentNodes = [new BNodeInternal<K, V>(currentNodes, sumChildSizes(currentNodes))];
       break;
     }
 
     const nextLevelCount = Math.ceil(nodeCount / targetNodeSize);
     check(nextLevelCount > 1);
-    const nextLevel = new Array<BNode<K, V>>(nextLevelCount);
+    nextLevel = new Array<BNode<K, V>>(nextLevelCount);
     let remainingNodes = nodeCount;
     let remainingParents = nextLevelCount;
     let childIndex = 0;
@@ -85,7 +85,7 @@ export function bulkLoadRoot<K, V>(
       const children = new Array<BNode<K, V>>(chunkSize);
       let size = 0;
       for (let j = 0; j < chunkSize; j++) {
-        const child = currentLevel[childIndex++];
+        const child = currentNodes[childIndex++];
         children[j] = child;
         size += child.size();
       }
@@ -99,9 +99,7 @@ export function bulkLoadRoot<K, V>(
     const lastNode = nextLevel[nextLevelCount - 1] as BNodeInternal<K, V>;
     while (lastNode.children.length < minSize)
       lastNode.takeFromLeft(secondLastNode);
-
-    currentLevel = nextLevel;
   }
 
-  return currentLevel[0];
+  return currentNodes[0];
 }

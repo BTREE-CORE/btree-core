@@ -69,7 +69,7 @@ export function decompose<K, V>(
 
   const addSharedNodeToDisjointSet = (node: BNode<K, V>, height: number) => {
     // flush pending entries
-    makeLeavesFrom(pendingKeys, pendingValues, maxNodeSize, onLeafCreation, decomposeLoadFactor);
+    makeLeavesFrom(pendingKeys, pendingValues, maxNodeSize, decomposeLoadFactor, onLeafCreation);
     pendingKeys.length = 0;
     pendingValues.length = 0;
 
@@ -382,7 +382,7 @@ export function decompose<K, V>(
   }
 
   // Ensure any trailing non-disjoint entries are added
-  makeLeavesFrom(pendingKeys, pendingValues, maxNodeSize, onLeafCreation, decomposeLoadFactor);
+  makeLeavesFrom(pendingKeys, pendingValues, maxNodeSize, decomposeLoadFactor, onLeafCreation);
   // In cases like full interleaving, no leaves may be created until now
   if (tallestHeight < 0 && disjointHeights.length > 0) {
     tallestIndex = 0;

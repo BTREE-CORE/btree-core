@@ -47,7 +47,7 @@ function decompose(left, right, combineFn, ignoreRight) {
     };
     var addSharedNodeToDisjointSet = function (node, height) {
         // flush pending entries
-        (0, shared_1.makeLeavesFrom)(pendingKeys, pendingValues, maxNodeSize, onLeafCreation, decomposeLoadFactor);
+        (0, shared_1.makeLeavesFrom)(pendingKeys, pendingValues, maxNodeSize, decomposeLoadFactor, onLeafCreation);
         pendingKeys.length = 0;
         pendingValues.length = 0;
         // Don't share underfilled leaves, instead mark them as needing merging
@@ -299,7 +299,7 @@ function decompose(left, right, combineFn, ignoreRight) {
         }
     }
     // Ensure any trailing non-disjoint entries are added
-    (0, shared_1.makeLeavesFrom)(pendingKeys, pendingValues, maxNodeSize, onLeafCreation, decomposeLoadFactor);
+    (0, shared_1.makeLeavesFrom)(pendingKeys, pendingValues, maxNodeSize, decomposeLoadFactor, onLeafCreation);
     // In cases like full interleaving, no leaves may be created until now
     if (tallestHeight < 0 && disjointHeights.length > 0) {
         tallestIndex = 0;

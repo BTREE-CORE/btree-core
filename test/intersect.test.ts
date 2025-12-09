@@ -12,6 +12,8 @@ import {
 
 type SharedCall = { key: number, leftValue: number, rightValue: number };
 
+// Calls `assertion` on the results of both `forEachKeyInBoth` and `intersect`.
+// Also ensures that `intersect()` behaves self-consistently.
 const runForEachKeyInBothAndIntersect = (
   left: BTreeEx<number, number>,
   right: BTreeEx<number, number>,
@@ -28,9 +30,12 @@ const runForEachKeyInBothAndIntersect = (
     intersectionCalls.push({ key, leftValue, rightValue });
     return leftValue;
   });
+  
+  // Verify that intersect() produces a valid tree that matches its own calls to `combineFn`
+  resultTree.checkValid();
   const expectedEntries = intersectionCalls.map(({ key, leftValue }) => [key, leftValue] as [number, number]);
   expect(resultTree.toArray()).toEqual(expectedEntries);
-  resultTree.checkValid();
+
   assertion(intersectionCalls);
 };
 

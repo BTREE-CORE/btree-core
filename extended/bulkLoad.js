@@ -40,7 +40,6 @@ function bulkLoad(keys, values, maxNodeSize, compare, loadFactor) {
     var tree = new b_tree_1.default(undefined, compare, maxNodeSize);
     var target = tree;
     target._root = root;
-    //target._size = root.size();
     return tree;
 }
 exports.bulkLoad = bulkLoad;
@@ -54,33 +53,35 @@ function bulkLoadRoot(keys, values, maxNodeSize, compare, loadFactor) {
         throw new Error("bulkLoad: loadFactor must be between 0.5 and 1.0");
     if (keys.length !== values.length)
         throw new Error("bulkLoad: keys and values arrays must be the same length");
+    maxNodeSize = (0, b_tree_1.fixMaxSize)(maxNodeSize);
+    // Verify keys are sorted
     var totalPairs = keys.length;
     if (totalPairs > 1) {
         var previousKey = keys[0];
         for (var i = 1; i < totalPairs; i++) {
             var key = keys[i];
             if (compare(previousKey, key) >= 0)
-                throw new Error("bulkLoad: entries must be sorted by key in strictly ascending order");
+                throw new Error("bulkLoad: keys must be sorted in strictly ascending order");
             previousKey = key;
         }
     }
-    var leaves = [];
-    (0, shared_1.makeLeavesFrom)(keys, values, maxNodeSize, function (leaf) { return leaves.push(leaf); }, loadFactor);
-    if (leaves.length === 0)
+    // Get ALL the leaf nodes with which the tree will be populated
+    var currentNodes = [];
+    (0, shared_1.makeLeavesFrom)(keys, values, maxNodeSize, loadFactor, currentNodes.push.bind(currentNodes));
+    if (currentNodes.length === 0)
         return new b_tree_1.BNode();
     var targetNodeSize = Math.ceil(maxNodeSize * loadFactor);
-    var exactlyHalf = targetNodeSize === maxNodeSize / 2;
+    var isExactlyHalf = targetNodeSize === maxNodeSize / 2;
     var minSize = Math.floor(maxNodeSize / 2);
-    var currentLevel = leaves;
-    while (currentLevel.length > 1) {
-        var nodeCount = currentLevel.length;
-        if (nodeCount <= maxNodeSize && (nodeCount !== maxNodeSize || !exactlyHalf)) {
-            currentLevel = [new b_tree_1.BNodeInternal(currentLevel, (0, b_tree_1.sumChildSizes)(currentLevel))];
+    for (var nextLevel = void 0; currentNodes.length > 1; currentNodes = nextLevel) {
+        var nodeCount = currentNodes.length;
+        if (nodeCount <= maxNodeSize && (nodeCount !== maxNodeSize || !isExactlyHalf)) {
+            currentNodes = [new b_tree_1.BNodeInternal(currentNodes, (0, b_tree_1.sumChildSizes)(currentNodes))];
             break;
         }
         var nextLevelCount = Math.ceil(nodeCount / targetNodeSize);
         (0, b_tree_1.check)(nextLevelCount > 1);
-        var nextLevel = new Array(nextLevelCount);
+        nextLevel = new Array(nextLevelCount);
         var remainingNodes = nodeCount;
         var remainingParents = nextLevelCount;
         var childIndex = 0;
@@ -89,7 +90,7 @@ function bulkLoadRoot(keys, values, maxNodeSize, compare, loadFactor) {
             var children = new Array(chunkSize);
             var size = 0;
             for (var j = 0; j < chunkSize; j++) {
-                var child = currentLevel[childIndex++];
+                var child = currentNodes[childIndex++];
                 children[j] = child;
                 size += child.size();
             }
@@ -102,8 +103,7 @@ function bulkLoadRoot(keys, values, maxNodeSize, compare, loadFactor) {
         var lastNode = nextLevel[nextLevelCount - 1];
         while (lastNode.children.length < minSize)
             lastNode.takeFromLeft(secondLastNode);
-        currentLevel = nextLevel;
     }
-    return currentLevel[0];
+    return currentNodes[0];
 }
 exports.bulkLoadRoot = bulkLoadRoot;

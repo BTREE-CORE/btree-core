@@ -26,8 +26,8 @@ export function makeLeavesFrom<K, V>(
   keys: K[],
   values: V[],
   maxNodeSize: number,
+  loadFactor: number,
   onLeafCreation: (node: BNode<K, V>) => void,
-  loadFactor: number
 ) {
   if (keys.length !== values.length)
     throw new Error("makeLeavesFrom: keys and values arrays must be the same length");
@@ -40,17 +40,16 @@ export function makeLeavesFrom<K, V>(
 
   // This method creates as many evenly filled leaves as possible from
   // the pending entries. All will be > 50% full if we are creating more than one leaf.
-  let remainingLeaves = totalPairs <= maxNodeSize ? 1 : Math.ceil(totalPairs / targetSize);
   let remaining = totalPairs;
   let pairIndex = 0;
-  while (remainingLeaves > 0) {
+  let remainingLeaves = totalPairs <= maxNodeSize ? 1 : Math.ceil(totalPairs / targetSize);
+  for (; remainingLeaves > 0; remainingLeaves--) {
     const chunkSize = Math.ceil(remaining / remainingLeaves);
     const nextIndex = pairIndex + chunkSize;
     const chunkKeys = keys.slice(pairIndex, nextIndex);
     const chunkVals = values.slice(pairIndex, nextIndex);
     pairIndex = nextIndex;
     remaining -= chunkSize;
-    remainingLeaves--;
     const leaf = new BNode<K, V>(chunkKeys, chunkVals);
     onLeafCreation(leaf);
   }

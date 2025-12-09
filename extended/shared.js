@@ -14,7 +14,7 @@ var b_tree_1 = require("../b+tree");
  * @param loadFactor Desired load factor for created leaves. Must be between 0.5 and 1.0.
  * @internal
  */
-function makeLeavesFrom(keys, values, maxNodeSize, onLeafCreation, loadFactor) {
+function makeLeavesFrom(keys, values, maxNodeSize, loadFactor, onLeafCreation) {
     if (keys.length !== values.length)
         throw new Error("makeLeavesFrom: keys and values arrays must be the same length");
     var totalPairs = keys.length;
@@ -23,17 +23,16 @@ function makeLeavesFrom(keys, values, maxNodeSize, onLeafCreation, loadFactor) {
     var targetSize = Math.ceil(maxNodeSize * loadFactor);
     // This method creates as many evenly filled leaves as possible from
     // the pending entries. All will be > 50% full if we are creating more than one leaf.
-    var remainingLeaves = totalPairs <= maxNodeSize ? 1 : Math.ceil(totalPairs / targetSize);
     var remaining = totalPairs;
     var pairIndex = 0;
-    while (remainingLeaves > 0) {
+    var remainingLeaves = totalPairs <= maxNodeSize ? 1 : Math.ceil(totalPairs / targetSize);
+    for (; remainingLeaves > 0; remainingLeaves--) {
         var chunkSize = Math.ceil(remaining / remainingLeaves);
         var nextIndex = pairIndex + chunkSize;
         var chunkKeys = keys.slice(pairIndex, nextIndex);
         var chunkVals = values.slice(pairIndex, nextIndex);
         pairIndex = nextIndex;
         remaining -= chunkSize;
-        remainingLeaves--;
         var leaf = new b_tree_1.BNode(chunkKeys, chunkVals);
         onLeafCreation(leaf);
     }

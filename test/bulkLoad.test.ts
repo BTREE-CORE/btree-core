@@ -75,7 +75,7 @@ describe.each(branchingFactors)('bulkLoad fanout %i', (maxNodeSize) => {
     const keys = [3, 2];
     const values = [30, 20];
     expect(() => bulkLoad<number, number>(keys.slice(), values.slice(), maxNodeSize, compareNumbers))
-      .toThrow('bulkLoad: entries must be sorted by key in strictly ascending order');
+      .toThrow('bulkLoad: keys must be sorted in strictly ascending order');
   });
 
   test('empty input produces empty tree', () => {
