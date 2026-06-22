@@ -1,16 +1,15 @@
 {
-  "name": "sorted-btree",
-  "version": "2.1.1",
-  "description": "A sorted list of key-value pairs in a fast, typed in-memory B+ tree with a powerful API.",
+  "name": "btree-core",
+  "version": "3.2.0",
+  "description": "btree-core is a high-performance B+ tree implementation designed for modern JavaScript applications. It provides efficient ordered data structures, predictable performance characteristics, and a clean, developer-friendly API.",
   "sideEffects": false,
   "main": "b+tree.js",
   "typings": "b+tree",
   "scripts": {
     "test": "tsc && echo //ts-jest-issue-657 >interfaces.js && jest",
-    "build": "tsc && npm run minify",
+    "build": "tsc",
     "minify": "node scripts/minify.js",
     "sizes": "npm run build && node scripts/size-report.js",
-    "prepare": "npm run build",
     "safePublish": "npm run build && testpack && npm publish",
     "benchmark": "npm run build && node benchmarks.js"
   },
@@ -28,27 +27,27 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/qwertie/btree-typescript.git"
+    "url": "git+https://github.com/BTREE-CORE/btree-core.git"
   },
   "keywords": [
     "B+",
     "tree",
     "btree",
-    "sorted",
-    "set",
-    "map",
-    "list",
+    "core",
     "collection",
     "fast-cloning",
     "copy-on-write",
-    "optimized"
+    "optimized",
+    "btree-core",
+    "map",
+    "list"
   ],
-  "author": "David Piepgrass",
+  "author": "Donnameyer",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/qwertie/btree-typescript/issues"
+    "url": "https://github.com/BTREE-CORE/btree-core/issues"
   },
-  "homepage": "https://github.com/qwertie/btree-typescript#readme",
+  "homepage": "https://github.com/BTREE-CORE/btree-core#readme",
   "devDependencies": {
     "@types/bintrees": "^1.0.2",
     "@types/collections": "^5.0.2",
