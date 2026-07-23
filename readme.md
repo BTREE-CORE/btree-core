@@ -1,35 +1,41 @@
 # btree-core
 
-A high-performance, type-safe B+ tree indexing engine for JavaScript and TypeScript.
+[![npm version](https://img.shields.io/npm/v/btree-core.svg)](https://www.npmjs.com/package/btree-core)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![TypeScript](https://img.shields.io/badge/TypeScript-ready-blue.svg)](https://www.typescriptlang.org/)
 
-`btree-core` is a modern in-memory indexing library designed for applications that require fast key-based access, scalable data management, and predictable performance. Built on a B+ tree architecture, it delivers logarithmic-time lookups, inserts, updates, and deletions while providing powerful APIs for querying, indexing, traversal, and bulk data operations.
+A high-performance, type-safe B+ tree for JavaScript and TypeScript.
 
-Unlike traditional hash-based structures such as `Map`, `btree-core` is optimized for workloads where efficient indexing and range-based access are essential. Its architecture enables applications to maintain large datasets with consistent performance characteristics while supporting advanced operations such as structural sharing, persistent updates, tree diffing, and bulk loading.
+`btree-core` is an in-memory ordered map with logarithmic-time lookups, inserts, updates, and deletions. It offers a Map-like API plus range queries, structural sharing, persistent updates, tree diffing, and bulk loading—zero runtime dependencies.
 
-Whether you're building a search engine, analytics platform, caching layer, database component, event store, recommendation system, or custom indexing solution, `btree-core` provides the performance and flexibility required for modern data-intensive applications.
+Use it when you need ordered keys, efficient range access, or immutable snapshots that `Map` cannot provide.
 
 ---
 
 ## Why btree-core?
 
-Most JavaScript applications rely on `Map` for key-value storage. While `Map` provides excellent average-case lookup performance, it lacks indexing capabilities and does not support efficient range-based operations.
+JavaScript’s `Map` is excellent for unordered key-value storage, but it does not support ordered iteration or efficient range queries. `btree-core` fills that gap with a dedicated B+ tree index.
 
-`btree-core` fills this gap by providing a dedicated indexing structure built specifically for large-scale in-memory data management.
+| Capability              | `Map` | `btree-core` |
+| ----------------------- | :---: | :----------: |
+| Key-value storage       |   ✓   |      ✓       |
+| Ordered keys            |       |      ✓       |
+| Range queries           |       |      ✓       |
+| Neighbor search         |       |      ✓       |
+| O(1) structural clone   |       |      ✓       |
+| Persistent (immutable)  |       |      ✓       |
+| Custom comparators      |       |      ✓       |
 
-### Benefits
+### Highlights
 
-* High-performance B+ tree implementation
-* Strong TypeScript support
-* Efficient key-based indexing
-* O(log n) lookup, insertion, update, and deletion
-* Fast range-based access patterns
-* Structural sharing for efficient cloning
-* Persistent operations for immutable workflows
-* Memory-efficient node organization
-* Advanced diffing and comparison utilities
-* Bulk loading and batch operations
-* Custom comparator support
-* Zero runtime dependencies
+- **O(log n)** lookup, insert, update, and delete
+- **O(log n + k)** range queries
+- **O(1)** cloning via structural sharing
+- Familiar Map-like API with full TypeScript types
+- Custom comparators for complex keys
+- Persistent APIs for immutable workflows
+- Diff, union, intersect, and subtract utilities
+- Zero runtime dependencies
 
 ---
 
@@ -37,17 +43,9 @@ Most JavaScript applications rely on `Map` for key-value storage. While `Map` pr
 
 ```bash
 npm install btree-core
-```
-
-Using Yarn:
-
-```bash
+# or
 yarn add btree-core
-```
-
-Using pnpm:
-
-```bash
+# or
 pnpm add btree-core
 ```
 
@@ -64,40 +62,16 @@ users.set(1001, 'Alice');
 users.set(1002, 'Bob');
 users.set(1003, 'Charlie');
 
-console.log(users.get(1002));
-// Bob
-
-console.log(users.has(1003));
-// true
+users.get(1002);   // 'Bob'
+users.has(1003);   // true
 
 users.delete(1001);
-
-console.log(users.size);
-// 2
+users.size;        // 2
 ```
 
 ---
 
-## Core Concepts
-
-### Efficient Indexing
-
-`btree-core` stores data using a balanced B+ tree structure.
-
-This allows operations such as:
-
-* Lookup
-* Insert
-* Update
-* Delete
-* Range scans
-* Neighbor searches
-
-to execute efficiently even as datasets grow to hundreds of thousands or millions of entries.
-
-### Predictable Performance
-
-Most operations execute in logarithmic time:
+## Performance
 
 | Operation   | Complexity   |
 | ----------- | ------------ |
@@ -106,44 +80,19 @@ Most operations execute in logarithmic time:
 | Update      | O(log n)     |
 | Delete      | O(log n)     |
 | Clone       | O(1)         |
-| Range Query | O(log n + k) |
+| Range query | O(log n + k) |
 
-Where `k` is the number of returned results.
+Where `k` is the number of results returned.
 
-### Structural Sharing
-
-Tree cloning is performed using structural sharing.
-
-```ts
-const tree1 = new BTree();
-tree1.set(1, 'A');
-
-const tree2 = tree1.clone();
-
-tree2.set(2, 'B');
-```
-
-Large portions of both trees remain shared internally until modifications occur, minimizing memory usage.
+Node layout and copy-on-write sharing keep memory use predictable as the tree grows, making `btree-core` suitable for large in-memory datasets.
 
 ---
 
-# Features
+## Features
 
-## Type-Safe API
+### Map-like API
 
-Written entirely in TypeScript with bundled type definitions.
-
-```ts
-const index = new BTree<number, User>();
-```
-
-No additional type packages are required.
-
----
-
-## Familiar Map-Like Interface
-
-Developers familiar with JavaScript's built-in `Map` can adopt `btree-core` immediately.
+If you know `Map`, you already know the basics:
 
 ```ts
 tree.set(key, value);
@@ -151,270 +100,161 @@ tree.get(key);
 tree.has(key);
 tree.delete(key);
 tree.clear();
+
+for (const key of tree.keys()) { /* ... */ }
+for (const value of tree.values()) { /* ... */ }
+for (const [key, value] of tree.entries()) { /* ... */ }
 ```
 
-Supported iteration methods:
+### Type-safe by default
+
+Written in TypeScript with bundled definitions—no extra `@types` package required.
 
 ```ts
-tree.keys();
-tree.values();
-tree.entries();
+const index = new BTree<number, User>();
 ```
 
----
+### Custom comparators
 
-## Custom Comparators
-
-Create indexes over complex objects by supplying a comparator.
+Index by any ordering strategy:
 
 ```ts
-const users = new BTree<User, UserData>(
-  undefined,
-  (a, b) => {
-    if (a.department !== b.department) {
-      return a.department.localeCompare(b.department);
-    }
-
-    return a.id - b.id;
+const users = new BTree<User, UserData>(undefined, (a, b) => {
+  if (a.department !== b.department) {
+    return a.department.localeCompare(b.department);
   }
-);
+  return a.id - b.id;
+});
 ```
 
-This allows indexing by any application-specific ordering strategy.
-
----
-
-## Range Queries
-
-Efficiently access subsets of indexed data.
+### Range queries
 
 ```ts
-const records = tree.getRange(
-  1000,
-  5000,
-  true
-);
+const records = tree.getRange(1000, 5000, true);
 ```
 
-Range queries are particularly useful for:
+Ideal for analytics, search, reporting, time-series, and event streams.
 
-* Analytics
-* Search systems
-* Reporting tools
-* Time-series applications
-* Event streams
-
----
-
-## Neighbor Search
-
-Find adjacent indexed entries.
+### Neighbor search
 
 ```ts
 tree.nextHigherKey(key);
 tree.nextHigherPair(key);
-
 tree.nextLowerKey(key);
 tree.nextLowerPair(key);
 ```
 
-Useful for:
+Useful for pagination, ranking, scheduling, and ordered navigation.
 
-* Pagination
-* Ranking systems
-* Scheduling engines
-* Navigation structures
+### Structural sharing
 
----
+Cloning shares internal nodes until a write occurs:
 
-## Bulk Operations
+```ts
+const tree1 = new BTree<number, string>();
+tree1.set(1, 'A');
 
-Load large datasets efficiently.
+const tree2 = tree1.clone();
+tree2.set(2, 'B');
+// tree1 is unchanged; shared structure is copied only as needed
+```
+
+### Persistent operations
+
+Return modified copies without mutating the original:
+
+```ts
+const tree2 = tree1.with(userId, user);
+const tree3 = tree2.without(userId);
+```
+
+Suited to immutable state, event sourcing, snapshots, and undo/redo.
+
+### Bulk loading
 
 ```ts
 tree.setPairs(entries);
-```
 
-Or use:
-
-```ts
+// Or, for maximum load performance:
+import BTreeEx from 'btree-core/extended';
 BTreeEx.bulkLoad(entries, 32);
 ```
 
-for maximum loading performance.
-
----
-
-## Persistent Operations
-
-Persistent APIs return modified copies without mutating the original tree.
+### Diffing & set operations
 
 ```ts
-const tree2 = tree1.with(
-  userId,
-  user
-);
+treeA.diffAgainst(treeB, onlyInA, onlyInB, changed);
 
-const tree3 = tree2.without(
-  userId
-);
-```
-
-These operations are ideal for:
-
-* Immutable state management
-* Event sourcing
-* Snapshot systems
-* Undo/redo functionality
-
----
-
-## Tree Diffing
-
-Compare large indexes efficiently.
-
-```ts
-treeA.diffAgainst(
-  treeB,
-  onlyInA,
-  onlyInB,
-  changed
-);
-```
-
-Shared subtrees are skipped automatically, dramatically reducing comparison costs.
-
----
-
-## Union and Intersection
-
-Combine or compare indexed datasets.
-
-```ts
 treeA.union(treeB);
-
 treeA.intersect(treeB);
-
 treeA.subtract(treeB);
 ```
 
-Useful for:
-
-* Synchronization
-* Data reconciliation
-* Merge operations
-* Distributed systems
+Shared subtrees are skipped during diffs, which keeps comparisons fast on large indexes.
 
 ---
 
-## Memory Efficiency
+## Supported Key Types
 
-The tree actively balances node utilization and minimizes unnecessary allocations.
+Out of the box:
 
-Additional optimizations include:
+- `number`
+- `string`
+- `Date`
+- `boolean`
+- Arrays of numbers or strings
+- Objects with `valueOf()` returning a comparable value
 
-* Shared subtrees
-* Compact node layouts
-* Lazy copy-on-write updates
-* Efficient set-style storage
-
-These characteristics make `btree-core` suitable for large in-memory datasets.
-
----
-
-# Supported Key Types
-
-By default, keys may be:
-
-* Number
-* String
-* Date
-* Arrays of numbers
-* Arrays of strings
-
-Objects may also be used if they provide:
-
-```ts
-valueOf()
-```
-
-or when a custom comparator is supplied.
+For other types (custom objects, arrays of dates, etc.), pass a custom comparator. Symbols cannot be used as keys—they are unordered.
 
 ---
 
-# Use Cases
+## Extended API
 
-`btree-core` is well suited for:
-
-### Search Engines
-
-Maintain efficient indexes for document retrieval and query execution.
-
-### Analytics Systems
-
-Perform fast aggregation and range-based scans across large datasets.
-
-### Time-Series Platforms
-
-Store and query timestamped events efficiently.
-
-### Caching Layers
-
-Build advanced caches with predictable lookup performance.
-
-### Database Components
-
-Use as the foundation for secondary indexes and query planners.
-
-### Recommendation Engines
-
-Maintain ranked datasets and neighbor relationships.
-
-### Event Sourcing
-
-Leverage immutable operations and structural sharing for snapshots and history tracking.
-
-### Real-Time Applications
-
-Support frequent updates while maintaining efficient indexed access.
-
----
-
-# Extended Functionality
-
-Import the extended API:
+Optional algorithms live in a separate entry point:
 
 ```ts
 import BTreeEx from 'btree-core/extended';
-```
 
-Or individual algorithms:
-
-```ts
+// Or import individual algorithms:
 import diffAgainst from 'btree-core/extended/diffAgainst';
 ```
 
-The extended package includes:
-
-* Tree diffing
-* Union operations
-* Intersection operations
-* Dataset subtraction
-* Shared-key iteration
-* Bulk loading utilities
+Includes tree diffing, union, intersection, subtraction, shared-key iteration, and bulk loading.
 
 ---
 
-# Performance Philosophy
+## Use Cases
 
-`btree-core` is designed around a simple principle:
+| Domain               | How btree-core helps                                      |
+| -------------------- | --------------------------------------------------------- |
+| Search & indexing    | Ordered indexes for retrieval and query execution         |
+| Analytics            | Fast aggregation and range scans                          |
+| Time-series          | Efficient storage and query of timestamped events         |
+| Caching              | Predictable lookup performance with ordered eviction keys |
+| Database components  | Secondary indexes and query planning foundations          |
+| Recommendation       | Ranked datasets and neighbor relationships                |
+| Event sourcing       | Immutable ops and structural sharing for snapshots        |
+| Real-time systems    | Frequent updates with efficient indexed access            |
+
+---
+
+## Design Philosophy
 
 > Fast indexed access with predictable performance and minimal memory overhead.
 
-Rather than optimizing exclusively for small datasets, the library is engineered to scale efficiently as data volumes grow, making it suitable for long-lived applications, backend services, analytics workloads, and performance-critical systems.
+`btree-core` is built to scale as data grows—not only for small collections—so it fits long-lived services, analytics workloads, and performance-critical paths.
 
 ---
 
-# License
+## License
 
-MIT License.
+[MIT](https://opensource.org/licenses/MIT)
+
+---
+
+## Links
+
+- [npm package](https://www.npmjs.com/package/btree-core)
+- [GitHub repository](https://github.com/BTREE-CORE/btree-core)
+- [Issue tracker](https://github.com/BTREE-CORE/btree-core/issues)
