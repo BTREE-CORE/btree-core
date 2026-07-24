@@ -37,3 +37,5 @@ jobs:
           "
       - name: License file
         run: test -f LICENSE || test -f LICENSE.md || test -f license || echo 'No LICENSE file (warn only)'
+
+# trigger: 2026-07-24T09:29:35.6398905-07:00
