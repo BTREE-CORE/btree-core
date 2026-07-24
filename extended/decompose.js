@@ -38,7 +38,9 @@ function decompose(left, right, combineFn, ignoreRight) {
     // During the upward part of the cursor walk, this holds the highest disjoint node seen so far.
     // This is done because we cannot know immediately whether we can add the node to the disjoint set
     // because its ancestor may also be disjoint and should be reused instead.
-    var highestDisjoint = undefined;
+    var highestDisjoint 
+    // Have to do this as cast to convince TS it's ever assigned
+    = undefined;
     var minSize = Math.floor(maxNodeSize / 2);
     var onLeafCreation = function (leaf) {
         var height = leaf.keys.length < minSize ? -1 : 0;
@@ -398,8 +400,10 @@ function processSide(heights, nodes, start, end, step, context) {
         var insertionDepth = currentHeight - (subtreeHeight + 1);
         // Ensure path is unshared before mutation
         ensureNotShared(context, isSharedFrontierDepth, insertionDepth);
-        var insertionCount = void 0; // non-recursive
-        var insertionSize = void 0; // recursive
+        var insertionCount = // non-recursive
+         void 0; // non-recursive
+        var insertionSize = // recursive
+         void 0; // recursive
         if (isEntryInsertion) {
             (0, b_tree_1.check)(subtree.isShared !== true);
             insertionCount = insertionSize = subtree.keys.length;

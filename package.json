@@ -1,6 +1,6 @@
 {
   "name": "btree-core",
-  "version": "3.2.0",
+  "version": "3.2.4",
   "description": "btree-core is a high-performance B+ tree implementation designed for modern JavaScript applications. It provides efficient ordered data structures, predictable performance characteristics, and a clean, developer-friendly API.",
   "sideEffects": false,
   "main": "b+tree.js",
@@ -42,7 +42,7 @@
     "map",
     "list"
   ],
-  "author": "Donnameyer",
+  "author": "Donna Meyer",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/BTREE-CORE/btree-core/issues"
@@ -65,7 +65,23 @@
     "typescript": "^4.0.8",
     "uglify-js": "^3.11.4"
   },
-  "dependencies": {},
+  "dependencies": {
+    "babel-core": "^6.26.3",
+    "bintrees": "^1.0.2",
+    "@types/bintrees": "^1.0.2",
+    "@types/collections": "^5.0.2",
+    "collections": "^5.1.13",
+    "mersenne-twister": "^1.1.0",
+    "testpack-cli": "^1.1.4",
+    "ts-jest": "^26.4.3",
+    "ts-node": "^7.0.1",
+    "typescript": "^4.0.8",
+    "@types/mersenne-twister": "^1.1.2",
+    "@types/node": "^10.17.28",
+    "uglify-js": "^3.11.4",
+    "functional-red-black-tree": "^1.0.1",
+    "jest": "^26.6.2"
+  },
   "jest": {
     "globals": {
       "ts-jest": {
