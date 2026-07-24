@@ -25,3 +25,5 @@ jobs:
           for f in b+tree.js b+tree.d.ts sorted-array.js interfaces.d.ts readme.md; do
             test -f "$f" || (echo "missing $f" && exit 1)
           done
+
+# trigger: 2026-07-24T09:29:08.6779058-07:00
