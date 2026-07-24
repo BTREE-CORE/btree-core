@@ -1,0 +1,44 @@
+name: Dependency Audit
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/dependency-audit.yml'
+  pull_request:
+    paths:
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/dependency-audit.yml'
+  schedule:
+    - cron: '0 12 * * 1'
+  workflow_dispatch:
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: npm audit (non-blocking summary)
+        continue-on-error: true
+        run: npm audit --production --json > audit.json || true
+      - name: Print high-level audit status
+        run: |
+          if [ -f audit.json ]; then
+            node -e "const a=require('./audit.json'); console.log('vulnerabilities', a.metadata&&a.metadata.vulnerabilities||a);"
+          else
+            echo 'No audit.json produced'
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: npm-audit
+          path: audit.json
+          if-no-files-found: ignore

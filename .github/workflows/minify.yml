@@ -1,0 +1,22 @@
+name: Minify
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  minify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm run minify
+      - name: Check minified output
+        run: test -f b+tree.min.js && wc -c b+tree.min.js

@@ -1,0 +1,26 @@
+name: Node Compatibility
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  compat:
+    name: Node ${{ matrix.node }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [16, 18, 20, 22]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Smoke import
+        run: node -e "const BTree=require('./b+tree.js'); const t=new BTree(); t.set(1,'a'); if(t.get(1)!=='a') process.exit(1); console.log('ok', process.version);"

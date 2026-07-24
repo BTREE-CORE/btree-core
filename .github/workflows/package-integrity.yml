@@ -1,0 +1,27 @@
+name: Package Integrity
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Validate package.json
+        run: node -e "const p=require('./package.json'); if(!p.name||!p.version||!p.main) process.exit(1); console.log(p.name+'@'+p.version)"
+      - name: npm pack dry-run
+        run: npm pack --dry-run
+      - name: Required publish files
+        run: |
+          for f in b+tree.js b+tree.d.ts sorted-array.js interfaces.d.ts readme.md; do
+            test -f "$f" || (echo "missing $f" && exit 1)
+          done

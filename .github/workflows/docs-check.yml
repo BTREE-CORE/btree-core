@@ -1,0 +1,39 @@
+name: Docs Check
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'readme.md'
+      - 'README.md'
+      - 'package.json'
+      - '.github/workflows/docs-check.yml'
+  pull_request:
+    paths:
+      - 'readme.md'
+      - 'README.md'
+      - 'package.json'
+      - '.github/workflows/docs-check.yml'
+  workflow_dispatch:
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: README present
+        run: test -f readme.md || test -f README.md
+      - name: README has install section
+        run: |
+          file=readme.md
+          test -f README.md && file=README.md
+          grep -qiE 'install|npm install' "$file"
+      - name: Package metadata links
+        run: |
+          node -e "
+            const p=require('./package.json');
+            if(!p.repository||!p.bugs||!p.homepage) process.exit(1);
+            console.log('ok', p.homepage);
+          "
+      - name: License file
+        run: test -f LICENSE || test -f LICENSE.md || test -f license || echo 'No LICENSE file (warn only)'
