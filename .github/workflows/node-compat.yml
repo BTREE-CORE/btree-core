@@ -24,3 +24,5 @@ jobs:
       - run: npm run build
       - name: Smoke import
         run: node -e "const BTree=require('./b+tree.js'); const t=new BTree(); t.set(1,'a'); if(t.get(1)!=='a') process.exit(1); console.log('ok', process.version);"
+
+# trigger: 2026-07-24T09:29:21.8731725-07:00
